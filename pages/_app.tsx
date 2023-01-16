@@ -10,8 +10,12 @@ export default function App({
   return (
     <>
       <SessionProvider session={session}>
-        <Navbar />
-        <Component {...pageProps} />
+        <div className="flex flex-col justify-start h-[100vh]">
+          <Navbar />
+          <div className="grow bg-blue-300">
+            <Component {...pageProps} />
+          </div>
+        </div>
       </SessionProvider>
     </>
   );

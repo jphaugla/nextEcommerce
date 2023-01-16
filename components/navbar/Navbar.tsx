@@ -1,54 +1,20 @@
 import React from "react";
-import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
-interface Props {}
+import { NextPage } from "next/types";
 
-const TitleContainer = () => {
-  return <div>Navigation</div>;
-};
+import TitleContainer from "./subcomponents/TitleContainer";
+import BaseLinks from "./subcomponents/BaseLinks";
+import AuthLinks from "./subcomponents/AuthLinks";
 
-const BaseLinks = () => {
+const Navbar: NextPage = () => {
+  const { data: session, status: loading } = useSession();
+
   return (
-    <div>
-      <Link href="/">Home</Link>
-      <Link href="/dashboard">dashboard</Link>
-    </div>
-  );
-};
-
-const AuthLinks = () => {
-  return (
-    <div>
-      <Link
-        href="/api/auth/signin"
-        onClick={(e) => {
-          e.preventDefault();
-          signIn();
-        }}
-      >
-        Sign In
-      </Link>
-
-      <Link
-        href="/api/auth/signout"
-        onClick={(e) => {
-          e.preventDefault();
-          signOut();
-        }}
-      >
-        Sign Out
-      </Link>
-    </div>
-  );
-};
-
-const Navbar = () => {
-  return (
-    <div>
+    <div className="flex justify-between p-2 mx-8">
       <TitleContainer />
-      <BaseLinks />
-      <AuthLinks />
+      {session && <BaseLinks />}
+      <AuthLinks session={session} />
     </div>
   );
 };

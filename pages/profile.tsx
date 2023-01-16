@@ -1,19 +1,14 @@
 import Head from "next/head";
-import Image from "next/image";
-import { Inter } from "@next/font/google";
-import styles from "@/styles/Home.module.css";
-
 import { getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { NextPage } from "next/types";
+import type { User } from "next-auth";
 
 interface Props {
-  data: string;
+  data: User;
 }
 
-const inter = Inter({ subsets: ["latin"] });
-
-const Home: NextPage<Props> = ({ data }) => {
+const Profile: NextPage<Props> = ({ data }) => {
   return (
     <>
       <Head>
@@ -22,29 +17,34 @@ const Home: NextPage<Props> = ({ data }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex bg-red-400">{data}</main>
+      <main className="flex bg-red-400">
+        {data && (
+          <div>
+            <p>Hello, {data.name}</p>
+            <p>Email: {data.email}</p>
+          </div>
+        )}
+      </main>
     </>
   );
 };
 
-export default Home;
+export default Profile;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
-  // console.log("session:", session);
-
-  // if (!session) {
-  //   return {
-  //     redirect: {
-  //       destination: "/api/auth/signin?callbackUrl=http://localhost:3000/blog",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin?callbackUrl=http://localhost:3000/",
+        permanent: false,
+      },
+    };
+  }
 
   return {
     props: {
-      data: session ? "List of 100 personalized blogs" : "list of free blogs",
+      data: session.user ? session.user : null,
     },
   };
 };
