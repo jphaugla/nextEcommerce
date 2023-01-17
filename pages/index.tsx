@@ -24,16 +24,31 @@ const Home: NextPage<Props> = ({ data }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="h-[100%] grid grid-cols-5 bg-slate-600 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-4 scroll scroll-smooth">
-        {products.map((obj) => (
-          <Card
-            name={obj.name}
-            src={obj.src}
-            price={obj.price}
-            alt={obj.alt}
-            quantity={obj.quantity}
-          />
-        ))}
+      <main className="h-[100%] flex justify-center bg-slate-600">
+        <div className="h-[100%] w-[220px] grid place-content-center gap-[10px] bg-green-700">
+          <div className="w-[200px] h-[200px] bg-red-300">
+            200 x 200 – Small Square
+          </div>
+          <div className="w-[160px] h-[600px] mx-auto bg-red-300">
+            160x600 Wide Skyscraper ad
+          </div>
+        </div>
+        <div className="h-[100%] grow grid grid-cols-4 bg-slate-600 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-4 scroll scroll-smooth">
+          {products.map((obj) => (
+            <Card
+              name={obj.name}
+              src={obj.src}
+              price={obj.price}
+              alt={obj.alt}
+              quantity={obj.quantity}
+            />
+          ))}
+        </div>
+        <div className="h-[100%] w-[200px] grid place-content-center gap-[10px] bg-green-700">
+          <div className="w-[160px] h-[600px] mx-auto bg-red-300">
+            160x600 Wide Skyscraper ad
+          </div>
+        </div>
       </main>
     </>
   );

@@ -11,7 +11,7 @@ const Navbar: NextPage = () => {
   const { data: session, status: loading } = useSession();
 
   return (
-    <div className="flex justify-between p-2 mx-8">
+    <div className="flex justify-between px-2 py-4 mx-8">
       <TitleContainer />
       {session && <BaseLinks />}
       <AuthLinks session={session} />
