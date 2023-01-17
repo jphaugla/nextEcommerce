@@ -1,0 +1,73 @@
+export const products = [
+  {
+    name: "soda",
+    src: "https://images.unsplash.com/photo-1553456558-aff63285bdd1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
+    price: 1.1,
+    alt: "soda pic",
+    quantity: 10,
+  },
+  {
+    name: "xbox controller",
+    src: "https://images.unsplash.com/photo-1600080972464-8e5f35f63d08?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
+    price: 20.50,
+    alt: "controller pic",
+    quantity: 5,
+  },
+  {
+    name: "backpack",
+    src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
+    price: 30.50,
+    alt: "backpack pic",
+    quantity: 3,
+  },
+  {
+    name: "shoes",
+    src: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80",
+    price: 25.15,
+    alt: "shoes pic",
+    quantity: 5,
+  },
+  {
+    name: "camera",
+    src: "https://images.unsplash.com/photo-1564466809058-bf4114d55352?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=386&q=80",
+    price: 65.15,
+    alt: "camera pic",
+    quantity: 1,
+  },
+  {
+    name: "headphones",
+    src: "https://images.unsplash.com/photo-1583394838336-acd977736f90?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=384&q=80",
+    price: 20.15,
+    alt: "head phones pic",
+    quantity: 2,
+  },
+  {
+    name: "watch",
+    src: "https://images.unsplash.com/photo-1555487505-8603a1a69755?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80",
+    price: 29.99,
+    alt: "watch pic",
+    quantity: 12,
+  },
+  {
+    name: "bottle",
+    src: "https://images.unsplash.com/photo-1589365278144-c9e705f843ba?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
+    price: 9.99,
+    alt: "bottle pic",
+    quantity: 1,
+  },
+  {
+    name: "pen",
+    src: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=375&q=80",
+    price: 3.99,
+    alt: "pen pic",
+    quantity: 19,
+  },
+  {
+    name: "hair dryer",
+    src: "https://images.unsplash.com/photo-1522338140262-f46f5913618a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=388&q=80",
+    price: 15.00,
+    alt: "hair dryer pic",
+    quantity: 4,
+  },
+
+]

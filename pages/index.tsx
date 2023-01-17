@@ -2,6 +2,8 @@ import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
+import Card from "@/components/card/Card";
+import { products } from "@/utils/sampleData";
 
 import { getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
@@ -22,7 +24,17 @@ const Home: NextPage<Props> = ({ data }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex bg-red-400">{data}</main>
+      <main className="h-[100%] grid grid-cols-5 bg-slate-600 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-4 scroll scroll-smooth">
+        {products.map((obj) => (
+          <Card
+            name={obj.name}
+            src={obj.src}
+            price={obj.price}
+            alt={obj.alt}
+            quantity={obj.quantity}
+          />
+        ))}
+      </main>
     </>
   );
 };

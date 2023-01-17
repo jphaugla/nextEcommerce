@@ -14,7 +14,7 @@ const SignIn = () => {
         href="/api/auth/signin"
         onClick={(e) => {
           e.preventDefault();
-          signIn();
+          signIn("google");
         }}
       >
         Sign In

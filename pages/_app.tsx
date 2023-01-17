@@ -10,9 +10,9 @@ export default function App({
   return (
     <>
       <SessionProvider session={session}>
-        <div className="flex flex-col justify-start h-[100vh]">
+        <div className="flex flex-col justify-start h-[100vh] scrollbar-hide">
           <Navbar />
-          <div className="grow bg-blue-300">
+          <div className="grow bg-blue-300 overflow-clip">
             <Component {...pageProps} />
           </div>
         </div>
