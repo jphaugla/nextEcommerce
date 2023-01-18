@@ -44,8 +44,8 @@ const SidebarSignIn = () => {
 
 const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
   return (
-    <div className="absolute h-[100vh] w-[240px] xxs:w-[280px] xs:w-[300px] sm:w-[400px] bg-yellow-400 z-50 right-0 block sm:hidden">
-      <div className="bg-red-300 flex justify-end">
+    <div className="absolute h-[100vh] w-[240px]  bg-slate-200 z-50 right-0 block sm:hidden ">
+      <div className="bg-slate-300 flex py-4 pr-1 justify-end">
         <button
           type="button"
           className="p-2 rounded-md inline-flex items-center justify-center text-gray-400"
@@ -53,7 +53,7 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
         >
           <span className="sr-only">Close menu</span>
           <svg
-            className="h-5 w-6"
+            className="h-10 w-12"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -70,10 +70,10 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
         </button>
       </div>
       {session ? (
-        <div>
+        <div className="text-center border-2 border-red-200">
           <Link
             href="/api/auth/signout"
-            className="hover:ring-4 rounded-md p-2"
+            className="rounded-md p-2"
             onClick={(e) => {
               e.preventDefault();
               signOut({
@@ -88,7 +88,12 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
         <SidebarSignIn />
       )}
 
-      <div>Home</div>
+      <div className="grid place-items-center">
+        <div className="text-center w-[40%] text-blue-400 rounded-lg hover:text-blue-300 font-extrabold cursor-pointer hover:ring-4">
+          Home
+        </div>
+      </div>
+
       <div>About</div>
       <div>Contact</div>
       {session && <div>Profile</div>}

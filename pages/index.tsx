@@ -28,7 +28,7 @@ const Home: NextPage<Props> = ({ data }) => {
       </Head>
 
       <main className="h-[100%] flex justify-center bg-slate-600">
-        <div className="h-[100%] grow grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 bg-slate-500 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-8 scroll scroll-smooth">
+        <div className="h-[100%] grow grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 bg-slate-500 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-8 scroll scroll-smooth">
           {products.map((obj) => (
             <Card
               name={obj.name}
