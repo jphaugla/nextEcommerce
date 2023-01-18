@@ -36,3 +36,28 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+
+# TO DO:
+- ~~Fix navbar link displays~~
+- ~~Add uuid for sample Data to do Key~~
+- ~~Create Sidebar~~
+- Style Sidebar Component
+- Create individual product pages
+- Link a database to next-auth
+- ~~Add a cart SVG in corner~~
+- ~~Add hamburger menu for navbar~~
+- Create cart in database for each user
+- Create crud operations for database
+- Create a cart page with a checkout link
+- Create checkout page
+- Integrate square with env variables
+- Create a contact page
+- Create a profile page
+- Create an about page 
+- Add xxl breakpoint in CSS
+- Make homepage responsive in xxl
+- Create express graphQL app for sample data
+- Add Apollo Client to frontend
+- Link database with products
+- Add subscription for cart

@@ -3,6 +3,8 @@ import Image from "next/image";
 import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
 import Card from "@/components/card/Card";
+import AdSkySquare from "@/components/ads/AdSkySquare";
+import AdNone from "@/components/ads/AdNone";
 import { products } from "@/utils/sampleData";
 
 import { getSession } from "next-auth/react";
@@ -24,16 +26,9 @@ const Home: NextPage<Props> = ({ data }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
       <main className="h-[100%] flex justify-center bg-slate-600">
-        <div className="h-[100%] w-[220px] grid place-content-center gap-[10px] bg-green-700">
-          <div className="w-[200px] h-[200px] bg-red-300">
-            200 x 200 – Small Square
-          </div>
-          <div className="w-[160px] h-[600px] mx-auto bg-red-300">
-            160x600 Wide Skyscraper ad
-          </div>
-        </div>
-        <div className="h-[100%] grow grid grid-cols-4 bg-slate-600 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-4 scroll scroll-smooth">
+        <div className="h-[100%] grow grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 bg-slate-500 overflow-y-scroll scrollbar-hide place-items-center p-5 gap-y-8 scroll scroll-smooth">
           {products.map((obj) => (
             <Card
               name={obj.name}
@@ -41,13 +36,9 @@ const Home: NextPage<Props> = ({ data }) => {
               price={obj.price}
               alt={obj.alt}
               quantity={obj.quantity}
+              key={obj.id}
             />
           ))}
-        </div>
-        <div className="h-[100%] w-[200px] grid place-content-center gap-[10px] bg-green-700">
-          <div className="w-[160px] h-[600px] mx-auto bg-red-300">
-            160x600 Wide Skyscraper ad
-          </div>
         </div>
       </main>
     </>
@@ -58,17 +49,6 @@ export default Home;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
-  // console.log("session:", session);
-
-  // if (!session) {
-  //   return {
-  //     redirect: {
-  //       destination: "/api/auth/signin?callbackUrl=http://localhost:3000/blog",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-
   return {
     props: {
       data: session ? "List of 100 personalized blogs" : "list of free blogs",

@@ -1,22 +1,37 @@
 import React from "react";
 import Link from "next/link";
-interface Props {}
+import type { Session } from "next-auth";
+interface Props {
+  session: Session | null;
+}
 
-const BaseLinks = () => {
+//use the session as a prop instead of using it in Navbar.tsx
+
+const BaseLinks: React.FC<Props> = ({ session }) => {
   return (
-    <div className="flex gap-3">
+    <div className="hidden sm:flex gap-3">
       <div className="grid place-items-center p-2 rounded-md hover:ring-4">
         <Link href="/">Home</Link>
       </div>
+
       <div className="grid place-items-center p-2 rounded-md hover:ring-4">
-        <Link href="/profile">Profile</Link>
+        <Link href="/about">About</Link>
       </div>
-      <div className="grid place-items-center p-2 rounded-md hover:ring-4">
-        <Link href="/cart">Cart</Link>
-      </div>
+
       <div className="grid place-items-center p-2 rounded-md hover:ring-4">
         <Link href="/contact">Contact</Link>
       </div>
+
+      {session && (
+        <div className="grid place-items-center p-2 rounded-md hover:ring-4">
+          <Link href="/profile">Profile</Link>
+        </div>
+      )}
+
+      {/* <div className="grid place-items-center p-2 rounded-md hover:ring-4">
+        <Link href="/cart">Cart</Link>
+      </div> */}
+
       {/* <div className="grid place-items-center p-2 rounded-md hover:ring-4">
         <Link href="/checkout">
           <button
