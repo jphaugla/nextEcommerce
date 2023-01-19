@@ -1,27 +1,29 @@
 import { GetServerSideProps, NextPage } from "next";
 import { products } from "../../utils/sampleData";
-import { useRouter } from "next/router";
+import ItemCard from "@/components/itemCard/ItemCard";
 import React from "react";
 
-type product = {
+type Product = {
   name: string;
   src: string;
   price: number;
   alt: string;
   quantity: number;
+  description: string;
   id: string;
 };
 
 interface Props {
-  products: [product];
+  products: [Product];
+  itemId: string;
 }
 
-const ItemDetailCardPage: NextPage<Props> = ({ products }) => {
+const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
+  let productsFiltered = products.filter((obj) => obj.id === itemId);
+  let product = productsFiltered.length > 0 ? productsFiltered[0] : null;
   return (
-    <div>
-      {products.map((obj) => (
-        <div key={obj.id}>{obj.name}</div>
-      ))}
+    <div className="h-[100%] grid place-items-center">
+      {product && <ItemCard product={product} />}
     </div>
   );
 };
@@ -33,5 +35,15 @@ export const getServerSideProps: GetServerSideProps = async ({
   res,
   resolvedUrl,
 }) => {
-  return { props: { products } };
+  console.log("url:", resolvedUrl);
+  const queryString = resolvedUrl.split("/")[2];
+  let itemId: string;
+
+  if (queryString) {
+    itemId = queryString;
+  } else {
+    itemId = "notFound";
+  }
+
+  return { props: { products, itemId } };
 };

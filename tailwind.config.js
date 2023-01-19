@@ -28,13 +28,13 @@ module.exports = {
     "./components/**/subcomponents/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    fontFamily: {
-      sans: ['"Comic Sans MS Italic"'],
-      serif: ["Georgia"],
-      mono: ["ui-monospace"],
-      display: ["Oswald"],
-      body: ['"Open Sans"'],
-    },
+    // fontFamily: {
+    //   sans: ['"Comic Sans MS Italic"'],
+    //   serif: ["Georgia"],
+    //   mono: ["ui-monospace"],
+    //   display: ["Oswald"],
+    //   body: ['"Open Sans"'],
+    // },
     screens: {
       xxs: "350px",
       xs: "500px",
