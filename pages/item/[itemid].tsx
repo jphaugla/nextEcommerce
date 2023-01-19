@@ -20,7 +20,7 @@ const ItemDetailCardPage: NextPage<Props> = ({ products }) => {
   return (
     <div>
       {products.map((obj) => (
-        <div>{obj.name}</div>
+        <div key={obj.id}>{obj.name}</div>
       ))}
     </div>
   );
