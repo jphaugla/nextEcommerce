@@ -18,7 +18,7 @@ const SidebarSignIn = () => {
           signIn("google");
         }}
       >
-        <div className=" flex text-white bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-3 xs:px-5 py-2.5 text-center  items-center dark:focus:ring-[#4285F4]/55 ">
+        <div className=" flex text-white bg-[#111727] border-solid border-2 border-white hover:bg-[#111727]/90 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-3 xs:px-5 py-2.5 text-center  items-center dark:focus:ring-[#4285F4]/55 ">
           <svg
             className="w-4 h-4 mr-2 -ml-1"
             aria-hidden="true"
@@ -42,13 +42,31 @@ const SidebarSignIn = () => {
   );
 };
 
+const SidebarSignOut = () => {
+  return (
+    <div className="grid sm:hidden place-items-center rounded-md">
+      <Link
+        href="/api/auth/signout"
+        onClick={(e) => {
+          e.preventDefault();
+          signOut();
+        }}
+      >
+        <div className=" flex text-white bg-[#111727] border-solid border-2 border-white hover:bg-[#111727]/90 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-3 xs:px-5 py-2.5 text-center  items-center dark:focus:ring-[#4285F4]/55 ">
+          <span className="inline-block">Sign Out</span>
+        </div>
+      </Link>
+    </div>
+  );
+};
+
 const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
   return (
-    <div className="absolute h-[100vh] w-[240px]  bg-slate-200 z-50 right-0 block sm:hidden ">
-      <div className="bg-slate-300 flex py-4 pr-1 justify-end">
+    <div className="absolute h-[100vh] w-[240px]  bg-[#111727] z-50 right-0 sm:hidden flex flex-col gap-[24px] rounded-tl-3xl rounded-bl-3xl">
+      <div className="bg-[#343b48] flex py-4 pr-1 justify-end rounded-tl-3xl ">
         <button
           type="button"
-          className="p-2 rounded-md inline-flex items-center justify-center text-gray-400"
+          className="p-0 rounded-md inline-flex items-center justify-center text-white border-white border-2"
           onClick={handleShowSideMenu}
         >
           <span className="sr-only">Close menu</span>
@@ -69,35 +87,40 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
           </svg>
         </button>
       </div>
-      {session ? (
-        <div className="text-center border-2 border-red-200">
-          <Link
-            href="/api/auth/signout"
-            className="rounded-md p-2"
-            onClick={(e) => {
-              e.preventDefault();
-              signOut({
-                callbackUrl: `http://localhost:3000/`,
-              });
-            }}
-          >
-            Sign Out
-          </Link>
+      {session ? <SidebarSignOut /> : <SidebarSignIn />}
+
+      <Link href={"/"}>
+        <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
+          <p>Home</p>
         </div>
-      ) : (
-        <SidebarSignIn />
+      </Link>
+
+      <Link href={"/about"}>
+        <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
+          <p>About</p>
+        </div>
+      </Link>
+
+      <Link href={"/contact"}>
+        <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
+          <p>Contact</p>
+        </div>
+      </Link>
+
+      {session && (
+        <Link href={"/profile"}>
+          <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
+            <p>Profile</p>
+          </div>
+        </Link>
       )}
-
-      <div className="grid place-items-center">
-        <div className="text-center w-[40%] text-blue-400 rounded-lg hover:text-blue-300 font-extrabold cursor-pointer hover:ring-4">
-          Home
-        </div>
-      </div>
-
-      <div>About</div>
-      <div>Contact</div>
-      {session && <div>Profile</div>}
-      {session && <div>Cart</div>}
+      {session && (
+        <Link href={"/cart"}>
+          <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
+            <p>Cart</p>
+          </div>
+        </Link>
+      )}
     </div>
   );
 };

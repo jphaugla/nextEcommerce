@@ -17,7 +17,7 @@ interface Props {
 
 const ItemCard: React.FC<Props> = ({ product }) => {
   return (
-    <div className="h-[100%] md:h-[85%] w-[100%] md:w-[80%] mx-auto bg-green-300 grid grid-cols-1 md:grid-cols-2  overflow-y-scroll md:overflow-y-clip scrollbar-hide">
+    <div className="h-[100%] md:h-[85%] w-[100%] md:w-[80%] mx-auto bg-green-300 grid grid-cols-1 md:grid-cols-2 md:rounded-2xl overflow-y-scroll md:overflow-y-clip scrollbar-hide">
       <div className="h-[100%] col-span-1 flex flex-col bg-blue-400">
         <div className="text-3xl text-center py-3">
           <h1>{product.name}</h1>
@@ -47,12 +47,12 @@ const ItemCard: React.FC<Props> = ({ product }) => {
 
       <div className="col-span-1 flex flex-col-reverse sm:flex-col">
         {/* ############################################# */}
-        <div className="grow overflow-y-scroll px-2 md:px-6">
+        <div className="grow overflow-y-scroll scrollbar-hide px-2 md:px-6">
           <h2 className="text-xl underline">About</h2>
           <p className="text-sm">{product.description}</p>
           <h2 className="text-xl underline">Features</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 w-1/2">
             <p className="text-sm col-span-1">width: {"8cm"}</p>
             <p className="text-sm col-span-1">length: {"8cm"}</p>
             <p className="text-sm col-span-1">height: {"15cm"}</p>
