@@ -144,14 +144,6 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
           <p>About</p>
         </div>
       </Link>
-
-      {/* {session && (
-        <Link href={"/cart"}>
-          <div className="h-[60px] grid  place-items-center hover:text-blue-300  cursor-pointer text-center  text-white">
-            <p>Cart</p>
-          </div>
-        </Link>
-      )} */}
     </div>
   );
 };
