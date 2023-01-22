@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { NextPage } from "next";
 
 interface Props {}
 interface FormContainerProps {
@@ -74,7 +75,7 @@ const FormContainer: React.FC<FormContainerProps> = ({ children }) => {
   );
 };
 
-const contact = () => {
+const contact: NextPage<Props> = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
