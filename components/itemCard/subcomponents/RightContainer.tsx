@@ -90,7 +90,7 @@ const PriceContainer: React.FC<Props> = ({ product }) => {
       </div>
 
       <div className="grid place-items-center col-span-1">
-        <div className="bg-[#11111] border-solid border-2 border-white py-4 px-10 cursor-pointer rounded-lg">
+        <div className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg">
           Add to cart
         </div>
       </div>
@@ -109,7 +109,7 @@ const RightContainer: React.FC<Props> = ({ product }) => {
         </div>
         <div className="px-2 md:px-6">
           <h2 className="text-xl underline mb-[8px]">Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 w-1/2">
+          <div className="grid grid-cols-1 md:grid-cols-2 w-2/3">
             <p className="text-sm col-span-1">width: {"8cm"}</p>
             <p className="text-sm col-span-1">length: {"8cm"}</p>
             <p className="text-sm col-span-1">height: {"15cm"}</p>

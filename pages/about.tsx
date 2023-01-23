@@ -24,6 +24,7 @@ const TextBlock: React.FC<TextBlockProps> = ({ styling, brStyling }) => {
 };
 
 const About: NextPage = () => {
+  const baseStyle = "text-sm md:text-base lg:text-lg";
   return (
     <div className="bg-slate-600 h-[100vh] overflow-y-scroll scrollbar-hide grid place-items-center">
       <div className="bg-slate-300 p-8 md:rounded-xl w-full">
@@ -42,30 +43,30 @@ const About: NextPage = () => {
           </div>
           <div className="px-6 col-span-2">
             <TextBlock
-              styling="text-sm md:text-base hidden md:block lg:text-lg"
+              styling={`${baseStyle} hidden md:block `}
               brStyling="hidden lg:block"
             />
             <TextBlock
-              styling="text-sm md:text-base hidden lg:block lg:text-lg"
+              styling={`${baseStyle} hidden lg:block`}
               brStyling="hidden xl:block"
             />
             <TextBlock
-              styling="text-sm md:text-base hidden xl:block lg:text-lg"
+              styling={`${baseStyle} hidden xl:block`}
               brStyling="hidden"
             />
           </div>
         </div>
         <div>
           <TextBlock
-            styling="text-sm md:text-base block md:hidden lg:text-lg mt-4"
+            styling={`${baseStyle}  block md:hidden  mt-4`}
             brStyling="block md:hidden"
           />
           <TextBlock
-            styling="text-sm md:text-base block lg:hidden lg:text-lg"
+            styling={`${baseStyle}  block lg:hidden`}
             brStyling="block lg:hidden"
           />
           <TextBlock
-            styling="text-sm md:text-base block xl:hidden lg:text-lg"
+            styling={`${baseStyle}  block xl:hidden`}
             brStyling="hidden"
           />
         </div>

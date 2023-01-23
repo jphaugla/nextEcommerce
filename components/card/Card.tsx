@@ -23,14 +23,14 @@ const Card: React.FC<Props> = ({
 }) => {
   return (
     <Link href={`item/${id}`}>
-      <div className=" w-64 xxs:w-80 xs:w-52 sm:w-64 md:w-52 lg:w-56 xl:w-56 aspect-[2/3] bg-slate-200 rounded-2xl hover:ring-4 hover:scale-105 cursor-pointer">
+      <div className=" w-32 xxs:w-40 xs:w-44 sm:w-64 md:w-52 lg:w-56 xl:w-56 aspect-[2/3] bg-slate-200 rounded-2xl hover:ring-4 hover:scale-105 cursor-pointer">
         <div className="relative aspect-[2/3] w-full overflow-clip rounded-t-2xl">
           <Image
             alt={alt}
             src={src}
             fill
-            sizes="16rem,
-        (max-width: 350px) 20rem,
+            sizes="13rem,
+        (max-width: 350px) 13rem,
         (max-width: 500px) 13rem,
         (max-width: 640px) 16rem,
         (max-width: 768px) 13rem,
@@ -38,10 +38,12 @@ const Card: React.FC<Props> = ({
         (max-width: 1280px) 14rem"
           />
         </div>
-        <div className="text-2xl px-3">{name}</div>
+        <div className="xss:text-base xs:text-lg sm:text-2xl px-2 sm:px-3">
+          {name}
+        </div>
 
-        <div className="grid grid-cols-2 justify-between px-3">
-          <div className="col-span-1 ">
+        <div className="grid grid-cols-5 justify-between px-2 xs:px-2 sm:px-3 pb-2">
+          <div className="col-span-3 text-xs sm:text-base">
             Price:{" "}
             {price.toLocaleString("en-US", {
               style: "currency",
@@ -49,8 +51,10 @@ const Card: React.FC<Props> = ({
             })}
           </div>
 
-          <div className="col-span-1 pb-2">
-            <div className="text-right">Qty: {quantity}</div>
+          <div className="col-span-2">
+            <div className="text-right text-xs sm:text-base">
+              Qty: {quantity}
+            </div>
           </div>
         </div>
       </div>
