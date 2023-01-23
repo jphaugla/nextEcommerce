@@ -64,7 +64,7 @@ const TextInput: React.FC<TextInputProps> = ({
 
 const InfoContainer: React.FC = () => {
   return (
-    <div className="text-gray-900 dark:text-gray-400 w-1/3 p-8 flex flex-col justify-evenly">
+    <div className="text-gray-900 dark:text-gray-400 w-full sm:w-1/3 p-8 flex flex-col gap-3 justify-evenly">
       <div className="rounded-lg border-solid border-2 bg-slate-500 text-white border-gray-500 p-2 shadow-md">
         <h2>Phone:</h2>
         <p className="">999-999-9999</p>
@@ -77,50 +77,64 @@ const InfoContainer: React.FC = () => {
       </div>
       <div className="rounded-lg border-solid border-2 bg-slate-500 text-white border-gray-500 p-2 shadow-md">
         <h2>Hours:</h2>
-        <table className="border-spacing-4">
+        <table className="border-spacing-4 md:mb-0">
           <thead></thead>
           <tbody>
             <tr>
-              <td className="pr-2">Mon</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>6:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Mon
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">6:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Tue</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>6:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Tue
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">6:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Wed</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>6:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Wed
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">6:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Thr</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>6:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Thr
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">6:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Fri</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>6:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Fri
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">6:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Sat</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>3:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Sat
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">3:00pm</td>
             </tr>
             <tr>
-              <td className="pr-2">Sun</td>
-              <td>8:00am</td>
-              <td>-</td>
-              <td>3:00pm</td>
+              <td className="pr-2 md:pr-1 lg:pr-2 text-base md:text-xs lg:text-sm">
+                Sun
+              </td>
+              <td className="text-base md:text-xs lg:text-sm">8:00am</td>
+              <td className="text-base md:text-xs lg:text-sm">-</td>
+              <td className="text-base md:text-xs lg:text-sm">3:00pm</td>
             </tr>
           </tbody>
         </table>
@@ -274,7 +288,7 @@ const ContactContainer: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-300 rounded-xl w-1/2 flex relative">
+    <div className="bg-slate-300 sm:rounded-xl w-full md:w-3/4 flex flex-col-reverse sm:flex-row relative">
       <InfoContainer />
 
       <div className="px-8 py-8 grow">
@@ -344,26 +358,25 @@ const ContactContainer: React.FC = () => {
             </button>
           </div>
         </form>
+        {formSuccess && (
+          <div className="bg-green-200 px-10 py-4 rounded-lg ">
+            <span>Your Message has Successfully been sent!</span>
+            <span
+              className="ml-2 text-gray-500 cursor-pointer"
+              onClick={() => setformSuccess(false)}
+            >
+              x
+            </span>
+          </div>
+        )}
       </div>
-
-      {formSuccess && (
-        <div className="bg-green-200 px-10 py-4 rounded-lg absolute bottom-0 translate-y-[100%] -translate-x-[50%] left-[50%]">
-          <span>Your Message has Successfully been sent!</span>
-          <span
-            className="ml-2 text-gray-500 cursor-pointer"
-            onClick={() => setformSuccess(false)}
-          >
-            x
-          </span>
-        </div>
-      )}
     </div>
   );
 };
 
 const contact: NextPage<Props> = () => {
   return (
-    <div className="bg-slate-600 h-[100vh] grid place-items-center">
+    <div className="bg-slate-600 h-[100vh] overflow-y-scroll scrollbar-hide grid place-items-center">
       <ContactContainer />
     </div>
   );
