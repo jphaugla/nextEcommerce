@@ -374,7 +374,7 @@ const ContactContainer: React.FC = () => {
   );
 };
 
-const contact: NextPage<Props> = () => {
+const Contact: NextPage<Props> = () => {
   return (
     <div className="bg-slate-600 h-[100vh] overflow-y-scroll scrollbar-hide grid place-items-center">
       <ContactContainer />
@@ -382,4 +382,4 @@ const contact: NextPage<Props> = () => {
   );
 };
 
-export default contact;
+export default Contact;
