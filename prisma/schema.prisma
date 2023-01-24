@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("PLANETSCALE_URL")
+  relationMode = "prisma"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  providerAccountId String
+  access_token      String? @db.Text
+  expires_at        Int?
+  id_token          String? @db.Text
+  provider          String
+  refresh_token     String? @db.Text
+  scope             String?
+  session_state     String?
+  token_type        String?
+  type              String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  expires      DateTime
+  sessionToken String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Item {
+  id          String  @id @default(cuid())
+  name        String
+  src         String
+  price       Float
+  alt         String
+  quantity    Int
+  description String
+  Cart        Cart?   @relation(fields: [cartId], references: [id])
+  cartId      String?
+
+  @@index([cartId])
+}
+
+model Cart {
+  id     String @id @default(cuid())
+  userId String
+  items  Item[]
+  User   User[]
+
+  @@unique([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  Account       Account[]
+  Session       Session[]
+  cart          Cart      @relation(fields: [id], references: [userId], onDelete: Cascade)
+
+  @@index([id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
