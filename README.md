@@ -42,23 +42,23 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - ~~Fix navbar link displays~~
 - ~~Add uuid for sample Data to do Key~~
 - ~~Create Sidebar~~
-- Get Icons for Sidebar Component
-- Style Sidebar Component
-- Create individual product pages
-- Link a database to next-auth
+- ~~Get Icons for Sidebar Component~~
+- ~~Style Sidebar Component~~
+- ~~Create individual product pages~~
+- ~~Link a database to next-auth~~
 - ~~Add a cart SVG in corner~~
 - ~~Add hamburger menu for navbar~~
-- Create cart in database for each user
+- ~~Create cart in database for each user~~
 - Create crud operations for database
-- Create a cart page with a checkout link
+- ~~Create a cart page with a checkout link~~
 - Create checkout page
 - Integrate square with env variables
-- Create a contact page
+- ~~Create a contact page~~
 - Create a profile page
-- Create an about page 
+- ~~Create an about page~~ 
 - ~~Add 2xl breakpoint in CSS~~
 - ~~Make homepage responsive in 2xl~~
 - Create express graphQL app for sample data
 - Add Apollo Client to frontend
-- Link database with products
+- ~~Link database with products~~
 - Add subscription for cart

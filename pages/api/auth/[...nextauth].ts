@@ -14,9 +14,9 @@ interface Message {
   id: string;
   name: string;
   email: string;
-  emailVerified: null | boolean;
+  emailVerified?: boolean;
   image: string;
-  cartId: null | string
+  cartId?: string
 }
 
 import GoogleProvider from "next-auth/providers/google";
