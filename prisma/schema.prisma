@@ -68,9 +68,10 @@ model User {
   image         String?
   Account       Account[]
   Session       Session[]
-  cart          Cart      @relation(fields: [id], references: [userId], onDelete: Cascade)
+  Cart          Cart?     @relation(fields: [cartId], references: [id])
+  cartId        String?
 
-  @@index([id])
+  @@index([cartId])
 }
 
 model VerificationToken {
