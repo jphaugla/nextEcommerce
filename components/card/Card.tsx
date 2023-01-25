@@ -6,7 +6,7 @@ interface Props {
   name: string;
   alt: string;
   src: string;
-  quantity: number;
+  stock: number;
   description: string;
   price: number;
   id: string;
@@ -16,7 +16,7 @@ const Card: React.FC<Props> = ({
   name,
   alt,
   src,
-  quantity,
+  stock,
   price,
   id,
   description,
@@ -52,9 +52,7 @@ const Card: React.FC<Props> = ({
           </div>
 
           <div className="col-span-2">
-            <div className="text-right text-xs sm:text-base">
-              Qty: {quantity}
-            </div>
+            <div className="text-right text-xs sm:text-base">Qty: {stock}</div>
           </div>
         </div>
       </div>

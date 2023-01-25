@@ -6,7 +6,7 @@ type Product = {
   src: string;
   price: number;
   alt: string;
-  quantity: number;
+  stock: number;
   description: string;
   id: string;
 };

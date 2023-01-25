@@ -35,7 +35,7 @@ const Home: NextPage<Props> = ({ data }) => {
               src={obj.src}
               price={obj.price}
               alt={obj.alt}
-              quantity={obj.quantity}
+              stock={obj.stock}
               description={obj.description}
               id={obj.id}
               key={obj.id}

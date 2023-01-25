@@ -2,7 +2,17 @@ import React from "react";
 import { products } from "@/utils/sampleData";
 import Image from "next/image";
 
-type Product = {
+import Head from "next/head";
+import { getSession } from "next-auth/react";
+import { GetServerSideProps } from "next";
+import { NextPage } from "next/types";
+import type { User } from "next-auth";
+
+interface Props {
+  data: User;
+}
+
+type CartItem = {
   name: string;
   src: string;
   price: number;
@@ -12,11 +22,24 @@ type Product = {
   id: string;
 };
 
-interface Props {
-  product: Product;
+interface CheckoutProps {
+  cartItem: CartItem;
 }
 
-const CheckoutItem: React.FC<Props> = ({ product }) => {
+//TEMPORARY
+const cartItems = products.map((obj) => {
+  return {
+    name: obj.name,
+    src: obj.src,
+    price: obj.price,
+    alt: obj.alt,
+    quantity: obj.stock,
+    description: obj.description,
+    id: obj.id,
+  };
+});
+
+const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
   return (
     <tr className="w-full flex justify-evenly">
       <td className="px-1 sm:px-2 py-2 sm:whitespace-nowrap w-1/5">
@@ -24,16 +47,16 @@ const CheckoutItem: React.FC<Props> = ({ product }) => {
           <div className="w-full col-span-1 sm:h-full">
             <Image
               className="rounded-full -z-50"
-              src={product.src}
+              src={cartItem.src}
               width="40"
               height="40"
               // layout='responsive'
               // sizes="40px"
-              alt={product.name}
+              alt={cartItem.name}
             />
           </div>
           <div className="truncate col-span-3 w-full pl-3 font-medium text-left text-gray-800">
-            {product.name}
+            {cartItem.name}
           </div>
         </div>
       </td>
@@ -41,7 +64,7 @@ const CheckoutItem: React.FC<Props> = ({ product }) => {
       <td className="px-1 sm:px-2 py-2 sm:whitespace-nowrap grid place-items-center w-1/5">
         <div className="text-center font-medium grid place-items-center">
           <p>
-            {product.price.toLocaleString("en-US", {
+            {cartItem.price.toLocaleString("en-US", {
               style: "currency",
               currency: "USD",
             })}
@@ -64,7 +87,9 @@ const CheckoutItem: React.FC<Props> = ({ product }) => {
       </td>
 
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap grid place-items-center w-1/5">
-        <div className="text-sm sm:text-lg text-center">{product.quantity}</div>
+        <div className="text-sm sm:text-lg text-center">
+          {cartItem.quantity}
+        </div>
       </td>
 
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap grid place-items-center w-1/5">
@@ -126,8 +151,8 @@ const CartTable = () => {
             </thead>
 
             <tbody className="text-xs md:text-sm overflow-auto scrollbar-hide block w-[100%] h-[90%]">
-              {products.map((product) => (
-                <CheckoutItem key={product.id} product={product} />
+              {cartItems.map((cartItem) => (
+                <CheckoutItem key={cartItem.id} cartItem={cartItem} />
               ))}
             </tbody>
           </table>
@@ -161,7 +186,7 @@ const CartSummary = () => {
   );
 };
 
-const Cart = () => {
+const Cart: NextPage<Props> = ({ data }) => {
   return (
     <div className="h-[100%] bg-slate-600">
       <div className="h-full max-w-5xl mx-auto flex flex-col justify-between">
@@ -175,3 +200,21 @@ const Cart = () => {
 };
 
 export default Cart;
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getSession(context);
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin?callbackUrl=http://localhost:3000/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      data: session.user ? session.user : null,
+    },
+  };
+};

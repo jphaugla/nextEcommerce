@@ -5,7 +5,7 @@ type Product = {
   src: string;
   price: number;
   alt: string;
-  quantity: number;
+  stock: number;
   description: string;
   id: string;
 };
@@ -85,7 +85,7 @@ const PriceContainer: React.FC<Props> = ({ product }) => {
               currency: "USD",
             })}
           </p>
-          <p>Left in Stock: {product.quantity}</p>
+          <p>Left in Stock: {product.stock}</p>
         </div>
       </div>
 

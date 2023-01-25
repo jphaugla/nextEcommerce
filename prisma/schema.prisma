@@ -37,24 +37,33 @@ model Session {
   @@index([userId])
 }
 
+model CartItem {
+  id       String @id @default(cuid())
+  itemId   String
+  item     Item   @relation(fields: [itemId], references: [id])
+  quantity Int
+  Cart     Cart   @relation(fields: [cartId], references: [id])
+  cartId   String
+
+  @@index([cartId])
+  @@index([itemId])
+}
+
 model Item {
-  id          String  @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   src         String
   price       Float
   alt         String
-  quantity    Int
+  stock       Int
   description String
-  Cart        Cart?   @relation(fields: [cartId], references: [id])
-  cartId      String?
-
-  @@index([cartId])
+  CartItem    CartItem[]
 }
 
 model Cart {
-  id     String @id @default(cuid())
+  id     String     @id @default(cuid())
   userId String
-  items  Item[]
+  items  CartItem[]
   User   User[]
 
   @@unique([userId])

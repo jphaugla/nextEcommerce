@@ -41,15 +41,33 @@ export const authOptions = {
   adapter: PrismaAdapter(prisma),
   events: {
     createUser: async (message: any) => {
-      const updateUser = await prisma.user.update({
+
+      const generatedCartId = uuidv4()
+      const updatedUser = await prisma.user.update({
         where: {
           id: message.user.id
         },
         data: {
-          cartId: uuidv4()
+          cartId: generatedCartId
         }
       })
+      const userCart = await prisma.cart.create({
+        data: {
+          id: generatedCartId,
+          userId: updatedUser.id,
+        },
+      })
+      console.log('updated User: ', updatedUser)
+      console.log('user Cart: ', userCart)
     }
+
+
+
+
+
+
+
+
 
   }
   // callbacks: {
