@@ -50,18 +50,24 @@ model CartItem {
 }
 
 model Item {
-  id          String     @id @default(cuid())
-  name        String
-  src         String
-  price       Float
-  alt         String
-  stock       Int
-  description String
-  CartItem    CartItem[]
+  id           String     @id @default(cuid())
+  name         String
+  src          String
+  price        Float
+  alt          String
+  stock        Int
+  description  String
+  length       Float
+  width        Float
+  height       Float
+  weight       Float
+  discontinued Boolean
+  category     String
+  CartItem     CartItem[]
 }
 
 model Cart {
-  id     String     @id @default(cuid())
+  id     String     @id
   userId String
   items  CartItem[]
   User   User[]
