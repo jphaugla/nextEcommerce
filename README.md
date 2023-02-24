@@ -58,7 +58,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - ~~Create an about page~~ 
 - ~~Add 2xl breakpoint in CSS~~
 - ~~Make homepage responsive in 2xl~~
-- Create express graphQL app for sample data
-- Add Apollo Client to frontend
+- ~~Create express graphQL app for sample data~~
+- ~~Add Apollo Client to frontend~~
 - ~~Link database with products~~
 - Add subscription for cart

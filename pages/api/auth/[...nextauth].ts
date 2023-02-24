@@ -60,15 +60,6 @@ export const authOptions = {
       console.log('updated User: ', updatedUser)
       console.log('user Cart: ', userCart)
     }
-
-
-
-
-
-
-
-
-
   }
   // callbacks: {
   //   async jwt(token, account) {
