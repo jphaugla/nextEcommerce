@@ -52,11 +52,11 @@ model CartItem {
 model Item {
   id           String     @id @default(cuid())
   name         String
-  src          String
+  src          String     @db.Text
   price        Float
   alt          String
   stock        Int
-  description  String
+  description  String     @db.Text
   length       Float
   width        Float
   height       Float

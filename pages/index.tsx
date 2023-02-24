@@ -1,23 +1,17 @@
 import Head from "next/head";
-import Image from "next/image";
-import { Inter } from "@next/font/google";
-import styles from "@/styles/Home.module.css";
 import Card from "@/components/card/Card";
-import AdSkySquare from "@/components/ads/AdSkySquare";
-import AdNone from "@/components/ads/AdNone";
-import { products } from "@/utils/sampleData";
-
-import { getSession } from "next-auth/react";
-import { GetServerSideProps } from "next";
 import { NextPage } from "next/types";
+import client from "@/services/apollo-client";
+import { GET_ITEMS } from "@/utils/gqlQueries/queries";
+import { Product } from "@/types/items";
+import { ApolloError } from "@apollo/client";
 
 interface Props {
-  data: string;
+  products: Product[];
+  error: ApolloError | null;
 }
 
-const inter = Inter({ subsets: ["latin"] });
-
-const Home: NextPage<Props> = ({ data }) => {
+const Home: NextPage<Props> = ({ products, error }) => {
   return (
     <>
       <Head>
@@ -29,18 +23,19 @@ const Home: NextPage<Props> = ({ data }) => {
 
       <main className="h-[100%] flex justify-center bg-slate-600">
         <div className="h-[100%] grow grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 bg-slate-500 overflow-y-scroll scrollbar-hide place-items-center py-5 px-2 xs:px-5 gap-y-8 scroll scroll-smooth">
-          {products.map((obj) => (
-            <Card
-              name={obj.name}
-              src={obj.src}
-              price={obj.price}
-              alt={obj.alt}
-              stock={obj.stock}
-              description={obj.description}
-              id={obj.id}
-              key={obj.id}
-            />
-          ))}
+          {!error &&
+            products.map((obj) => (
+              <Card
+                name={obj.name}
+                src={obj.src}
+                price={obj.price}
+                alt={obj.alt}
+                stock={obj.stock}
+                description={obj.description}
+                id={obj.id}
+                key={obj.id}
+              />
+            ))}
         </div>
       </main>
     </>
@@ -49,11 +44,13 @@ const Home: NextPage<Props> = ({ data }) => {
 
 export default Home;
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
+export async function getStaticProps() {
+  const { data, error } = await client.query({ query: GET_ITEMS });
+  let products: Product[] = data.items;
   return {
     props: {
-      data: session ? "List of 100 personalized blogs" : "list of free blogs",
+      products: products,
+      error: error ? error : null,
     },
   };
-};
+}
