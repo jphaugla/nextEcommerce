@@ -1,21 +1,15 @@
 import { GetServerSideProps, NextPage } from "next";
-import { products } from "../../utils/sampleData";
+import client from "@/services/apollo-client";
+import { GET_ITEMS } from "@/utils/gqlQueries/queries";
+import { Product } from "@/types/items";
+import { ApolloError } from "@apollo/client";
 import ItemCard from "@/components/itemCard/ItemCard";
 import React from "react";
 
-type Product = {
-  name: string;
-  src: string;
-  price: number;
-  alt: string;
-  quantity: number;
-  description: string;
-  id: string;
-};
-
 interface Props {
-  products: [Product];
+  products: Product[];
   itemId: string;
+  error?: ApolloError;
 }
 
 const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
@@ -38,12 +32,18 @@ export const getServerSideProps: GetServerSideProps = async ({
   console.log("url:", resolvedUrl);
   const queryString = resolvedUrl.split("/")[2];
   let itemId: string;
-
+  const { data, error } = await client.query({ query: GET_ITEMS });
+  let products: Product[] = data.items;
   if (queryString) {
     itemId = queryString;
   } else {
     itemId = "notFound";
   }
-
-  return { props: { products, itemId } };
+  return {
+    props: {
+      itemId,
+      products: products,
+      error: error ? error : null,
+    },
+  };
 };

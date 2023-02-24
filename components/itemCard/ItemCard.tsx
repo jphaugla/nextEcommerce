@@ -2,16 +2,8 @@ import React from "react";
 import Image from "next/image";
 import LeftContainer from "./subcomponents/LeftContainer";
 import RightContainer from "./subcomponents/RightContainer";
-
-type Product = {
-  name: string;
-  src: string;
-  price: number;
-  alt: string;
-  stock: number;
-  description: string;
-  id: string;
-};
+import { Product } from "../../types/items";
+import { ApolloError } from "@apollo/client";
 
 interface Props {
   product: Product;

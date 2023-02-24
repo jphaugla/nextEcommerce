@@ -23,19 +23,7 @@ const Home: NextPage<Props> = ({ products, error }) => {
 
       <main className="h-[100%] flex justify-center bg-slate-600">
         <div className="h-[100%] grow grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 bg-slate-500 overflow-y-scroll scrollbar-hide place-items-center py-5 px-2 xs:px-5 gap-y-8 scroll scroll-smooth">
-          {!error &&
-            products.map((obj) => (
-              <Card
-                name={obj.name}
-                src={obj.src}
-                price={obj.price}
-                alt={obj.alt}
-                stock={obj.stock}
-                description={obj.description}
-                id={obj.id}
-                key={obj.id}
-              />
-            ))}
+          {!error && products.map((product) => <Card product={product} />)}
         </div>
       </main>
     </>

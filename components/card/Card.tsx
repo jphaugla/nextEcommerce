@@ -1,26 +1,15 @@
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
+import { Product } from "@/types/items";
 
 interface Props {
-  name: string;
-  alt: string;
-  src: string;
-  stock: number;
-  description: string;
-  price: number;
-  id: string;
+  product: Product;
 }
 
-const Card: React.FC<Props> = ({
-  name,
-  alt,
-  src,
-  stock,
-  price,
-  id,
-  description,
-}) => {
+const Card: React.FC<Props> = ({ product }) => {
+  const { name, src, price, alt, stock, id } = product;
+
   return (
     <Link href={`item/${id}`}>
       <div className=" w-32 xxs:w-40 xs:w-44 sm:w-64 md:w-52 lg:w-56 xl:w-56 aspect-[2/3] bg-slate-200 rounded-2xl hover:ring-4 hover:scale-105 cursor-pointer">
