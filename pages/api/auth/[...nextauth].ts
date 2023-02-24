@@ -1,14 +1,9 @@
 import NextAuth from "next-auth";
 import { v4 as uuidv4 } from 'uuid';
-// import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
-// import clientPromise from "../../../lib/mongodb";
-
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { PrismaClient } from "@prisma/client"
-
 import type { AuthOptions } from "next-auth";
 const prisma = new PrismaClient()
-
 
 interface Message {
   id: string;
@@ -20,8 +15,7 @@ interface Message {
 }
 
 import GoogleProvider from "next-auth/providers/google";
-export const authOptions = {
-  // Configure one or more authentication providers
+export const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -40,7 +34,7 @@ export const authOptions = {
   secret: process.env.JWT_SECRET,
   adapter: PrismaAdapter(prisma),
   events: {
-    createUser: async (message: any) => {
+    createUser: async (message) => {
 
       const generatedCartId = uuidv4()
       const updatedUser = await prisma.user.update({
@@ -61,20 +55,5 @@ export const authOptions = {
       console.log('user Cart: ', userCart)
     }
   }
-  // callbacks: {
-  //   async jwt(token, account) {
-  //     if (account?.accessToken) {
-  //       token.accessToken = account.accessToken;
-  //     }
-  //     return token;
-  //   },
-  //   redirect: async (url, _baseUrl) => {
-  //     if (url === "/user") {
-  //       return Promise.resolve("/");
-  //     }
-  //     return Promise.resolve("/");
-  //   },
-  // },
-
 };
 export default NextAuth(authOptions);
