@@ -17,7 +17,9 @@ const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
   let product = productsFiltered.length > 0 ? productsFiltered[0] : null;
   return (
     <div className="h-[100%] grid place-items-center bg-slate-500">
-      {product && <ItemCard product={product} key={product.id} />}
+      {product && (
+        <ItemCard product={product} key={`Item-card-${product.id}`} />
+      )}
     </div>
   );
 };
