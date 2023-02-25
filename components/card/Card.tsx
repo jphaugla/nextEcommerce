@@ -6,6 +6,12 @@ import { Product } from "@/types/items";
 interface Props {
   product: Product;
 }
+interface Loader {
+  src: string;
+}
+const myLoader = ({ src }: Loader) => {
+  return `${src}`;
+};
 
 const Card: React.FC<Props> = ({ product }) => {
   const { name, src, price, alt, stock, id } = product;
@@ -15,6 +21,7 @@ const Card: React.FC<Props> = ({ product }) => {
       <div className=" w-32 xxs:w-40 xs:w-44 sm:w-64 md:w-52 lg:w-56 xl:w-56 aspect-[2/3] bg-slate-200 rounded-2xl hover:ring-4 hover:scale-105 cursor-pointer">
         <div className="relative aspect-[2/3] w-full overflow-clip rounded-t-2xl">
           <Image
+            loader={myLoader}
             alt={alt}
             src={src}
             fill
