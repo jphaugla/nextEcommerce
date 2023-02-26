@@ -12,7 +12,6 @@ import Sidebar from "../sidebar/Sidebar";
 
 const Navbar: NextPage = () => {
   const { data: session, status: loading } = useSession();
-
   const [showSideMenu, setShowSideMenu] = React.useState<boolean>(false);
   const [numItems, setNumItems] = React.useState<number>(0);
 

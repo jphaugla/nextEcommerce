@@ -5,6 +5,9 @@ import client from "@/services/apollo-client";
 import { GET_ITEMS } from "@/utils/gqlQueries/queries";
 import { Product } from "@/types/items";
 import { ApolloError } from "@apollo/client";
+import { getSession } from "next-auth/react";
+import { GetServerSideProps } from "next";
+import { prisma } from "../services/prisma-client";
 
 interface Props {
   products: Product[];
@@ -35,13 +38,30 @@ const Home: NextPage<Props> = ({ products, error }) => {
 
 export default Home;
 
-export async function getStaticProps() {
+export const getServerSideProps: GetServerSideProps = async (context) => {
   const { data, error } = await client.query({ query: GET_ITEMS });
   let products: Product[] = data.items;
+  const session = await getSession(context);
+  let email = session?.user?.email;
+  if (email) {
+    let userTable = await prisma.user.findUnique({
+      where: {
+        email: email!,
+      },
+    });
+    if (userTable) {
+      let cartId = await prisma.cart.findUnique({
+        where: {
+          userId: userTable.id,
+        },
+      });
+      console.log("cart ID:", cartId?.id);
+    }
+  }
   return {
     props: {
       products: products,
       error: error ? error : null,
     },
   };
-}
+};
