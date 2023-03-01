@@ -54,7 +54,11 @@ const SignOutDiv = ({ numItems }: { numItems: number }) => {
           onClick={(e) => {
             e.preventDefault();
             signOut({
-              callbackUrl: `http://localhost:3000/`,
+              callbackUrl: `/api/auth/signin?callbackUrl=${
+                process.env.NODE_ENV === "production"
+                  ? "https://squarenext.vercel.app/"
+                  : "http://localhost:3000/"
+              }`,
             });
           }}
         >
