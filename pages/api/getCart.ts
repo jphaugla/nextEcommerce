@@ -1,6 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from "../../services/prisma-client"
 
+interface CartTableEntry {
+  id: string;
+  userId: string;
+}
+
 type ResData = {
   cartId?: string
   error?: string
@@ -24,11 +29,19 @@ export default async function handler(
   if (!user) {
     res.status(400).json({ error: 'No user found with session email' })
   } else {
-    let cartId = await prisma.cart.findUnique({
+    let cartId: CartTableEntry | null = await prisma.cart.findUnique({
       where: {
         userId: user.id,
       },
     });
-    res.status(200).json({ cartId: cartId?.id ? cartId.id : null })
+    if (cartId === null) {
+      res.status(400).json({ error: 'Could not retrieve cartid from database' })
+    } else {
+      if (!cartId?.id) {
+        res.status(400).json({ error: 'No id associated with cart entry' })
+      } else {
+        res.status(200).json({ cartId: cartId.id })
+      }
+    }
   }
 }
