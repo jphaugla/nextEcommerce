@@ -36,7 +36,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   if (!session) {
     return {
       redirect: {
-        destination: `/api/auth/signin?callbackUrl=${
+        destination: `${
           process.env.NODE_ENV === "production"
             ? "https://squarenext.vercel.app/"
             : "http://localhost:3000/"
@@ -52,3 +52,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     },
   };
 };
+
+/*
+`/api/auth/signin?callbackUrl=${
+          process.env.NODE_ENV === "production"
+            ? "https://squarenext.vercel.app/"
+            : "http://localhost:3000/"
+        }`,
+*/
