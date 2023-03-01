@@ -2,6 +2,12 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Navbar from "@/components/navbar/Navbar";
 import { SessionProvider } from "next-auth/react";
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+
+const client = new ApolloClient({
+  uri: "https://misty-night-9009.fly.dev/graphql",
+  cache: new InMemoryCache(),
+});
 
 export default function App({
   Component,
@@ -10,12 +16,14 @@ export default function App({
   return (
     <>
       <SessionProvider session={session}>
-        <div className="flex flex-col justify-start h-[100vh] bg-slate-300 scrollbar-hide">
-          <Navbar />
-          <div className="grow bg-blue-300 overflow-clip">
-            <Component {...pageProps} />
+        <ApolloProvider client={client}>
+          <div className="flex flex-col justify-start h-[100vh] bg-slate-300 scrollbar-hide">
+            <Navbar />
+            <div className="grow bg-blue-300 overflow-clip">
+              <Component {...pageProps} />
+            </div>
           </div>
-        </div>
+        </ApolloProvider>
       </SessionProvider>
     </>
   );

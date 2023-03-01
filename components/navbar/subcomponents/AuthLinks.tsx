@@ -3,9 +3,10 @@ import type { Session } from "next-auth";
 import Link from "next/link";
 import { signIn, signOut } from "next-auth/react";
 import CartIcon from "./CartIcon";
-
+import { Cart, CartItem } from "@/types/cartItems";
 interface Props {
   session: Session | null;
+  cartItems: CartItem[] | null;
 }
 
 const SignInDiv = () => {
@@ -42,11 +43,11 @@ const SignInDiv = () => {
   );
 };
 
-const SignOutDiv = () => {
+const SignOutDiv = ({ numItems }: { numItems: number }) => {
   return (
     <>
       <div className="hidden sm:flex justify-center align-middle gap-5 p-2 rounded-md">
-        <CartIcon numItems={3} />
+        <CartIcon numItems={numItems} />
         <Link
           href="/api/auth/signout"
           className="hover:ring-4 rounded-md p-2"
@@ -64,8 +65,13 @@ const SignOutDiv = () => {
   );
 };
 
-const AuthLinks: React.FC<Props> = ({ session }) => {
-  return <>{session ? <SignOutDiv /> : <SignInDiv />}</>;
+const AuthLinks: React.FC<Props> = ({ session, cartItems }) => {
+  const numItems = cartItems
+    ? cartItems.reduce((acc, cartItem: CartItem) => {
+        return acc + Number(cartItem.quantity);
+      }, 0)
+    : 0;
+  return <>{session ? <SignOutDiv numItems={numItems} /> : <SignInDiv />}</>;
 };
 
 export default AuthLinks;

@@ -91,3 +91,64 @@ export const UPDATE_ITEM = gql`
     }
   }
 `;
+
+export const ADD_CART_ITEM = gql`
+mutation AddCartItem($itemId: ID!, $cartId: ID!, $quantity: Int!) {
+  addCartItem(itemId: $itemId, cartId: $cartId, quantity: $quantity) {
+    quantity
+    id
+    name
+    stock
+  }
+}
+`
+export const UPDATE_CART_ITEM = gql`
+mutation UpdateCartItem($itemId: ID!, $cartId: ID!, $quantity: Int!) {
+  updateCartItem(itemId: $itemId, cartId: $cartId, quantity: $quantity) {
+    cartId
+    cartItems {
+      name
+      price
+      quantity
+      itemId
+      id
+      cartId
+      src
+      alt
+      stock
+      length
+      description
+      width
+      height
+      weight
+      discontinued
+      category
+    }
+  }
+}
+`
+export const REMOVE_CART_ITEM = gql`
+mutation RemoveCartItem($cartId: ID!, $itemId: ID!) {
+  RemoveCartItem(cartId: $cartId, itemId: $itemId) {
+    cartId
+    cartItems {
+      name
+      itemId
+      quantity
+      id
+      cartId
+      src
+      price
+      alt
+      stock
+      description
+      length
+      width
+      height
+      weight
+      discontinued
+      category
+    }
+  }
+}
+`

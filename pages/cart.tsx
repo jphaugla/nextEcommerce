@@ -1,8 +1,7 @@
 import React from "react";
-import { products } from "@/utils/sampleData";
 import Image from "next/image";
-
-import Head from "next/head";
+import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
+import { CartItem } from "@/types/cartItems";
 import { getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { NextPage } from "next/types";
@@ -11,33 +10,9 @@ import type { User } from "next-auth";
 interface Props {
   data: User;
 }
-
-type CartItem = {
-  name: string;
-  src: string;
-  price: number;
-  alt: string;
-  quantity: number;
-  description: string;
-  id: string;
-};
-
 interface CheckoutProps {
   cartItem: CartItem;
 }
-
-//TEMPORARY
-const cartItems = products.map((obj) => {
-  return {
-    name: obj.name,
-    src: obj.src,
-    price: obj.price,
-    alt: obj.alt,
-    quantity: obj.stock,
-    description: obj.description,
-    id: obj.id,
-  };
-});
 
 const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
   return (
@@ -50,8 +25,6 @@ const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
               src={cartItem.src}
               width="40"
               height="40"
-              // layout='responsive'
-              // sizes="40px"
               alt={cartItem.name}
             />
           </div>
@@ -78,7 +51,7 @@ const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
             <div className="w-1/3 font-bold text-lg select-none cursor-pointer">
               -
             </div>
-            <div className="w-1/3 font-bold text-lg">1</div>
+            <div className="w-1/3 font-bold text-lg">{cartItem.quantity}</div>
             <div className="w-1/3 font-bold text-lg select-none cursor-pointer">
               +
             </div>
@@ -87,9 +60,7 @@ const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
       </td>
 
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap grid place-items-center w-1/5">
-        <div className="text-sm sm:text-lg text-center">
-          {cartItem.quantity}
-        </div>
+        <div className="text-sm sm:text-lg text-center">{cartItem.stock}</div>
       </td>
 
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap grid place-items-center w-1/5">
@@ -122,7 +93,7 @@ const CartHeader = () => {
   );
 };
 
-const CartTable = () => {
+const CartTable = ({ cartItems }: { cartItems: CartItem[] | null }) => {
   return (
     <div className="text-gray-600 grow flex flex-col justify-center">
       <div className="bg-white sm:shadow-lg sm:rounded-sm border border-gray-200 w-full h-full">
@@ -151,9 +122,10 @@ const CartTable = () => {
             </thead>
 
             <tbody className="text-xs md:text-sm overflow-auto scrollbar-hide block w-[100%] h-[90%]">
-              {cartItems.map((cartItem) => (
-                <CheckoutItem key={cartItem.id} cartItem={cartItem} />
-              ))}
+              {cartItems &&
+                cartItems.map((cartItem: CartItem) => (
+                  <CheckoutItem key={cartItem.id} cartItem={cartItem} />
+                ))}
             </tbody>
           </table>
         </div>
@@ -162,19 +134,30 @@ const CartTable = () => {
   );
 };
 
-const CartSummary = () => {
+const CartSummary = ({ cartItems }: { cartItems: CartItem[] | null }) => {
+  const numItems = cartItems
+    ? cartItems.reduce((acc, cartItem: CartItem) => {
+        return acc + Number(cartItem.quantity);
+      }, 0)
+    : 0;
+  const totalCost = cartItems
+    ? cartItems.reduce((acc, cartItem: CartItem) => {
+        return acc + Number(cartItem.price);
+      }, 0)
+    : 0;
+
   return (
     <div className=" bg-[#0e142d] sm:shadow-lg sm:rounded-sm h-17 p-2">
       <div className="px-2 sm:px-5 py-4 grid grid-cols-4">
         <div className="col-span-1 grid place-items-center text-white">
           {`Total Cost: `}
-          {(1.53).toLocaleString("en-US", {
+          {totalCost.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
           })}
         </div>
         <div className="col-span-1 text-white grid place-items-center">
-          Number of Items: {4}
+          Number of Items: {numItems}
         </div>
         <div className="font-semibold col-span-2  flex justify-end">
           <p className="border-white border-solid border-2 text-white px-4 py-2 rounded-md cursor-pointer">
@@ -186,14 +169,15 @@ const CartSummary = () => {
   );
 };
 
-const Cart: NextPage<Props> = ({ data }) => {
+const Cart: NextPage<Props> = () => {
+  const { error, session, email, cartId, cartItems } = useGetCartByEmail();
   return (
     <div className="h-[100%] bg-slate-600">
       <div className="h-full max-w-5xl mx-auto flex flex-col justify-between">
         <CartMessage />
         <CartHeader />
-        <CartTable />
-        <CartSummary />
+        <CartTable cartItems={cartItems} />
+        <CartSummary cartItems={cartItems} />
       </div>
     </div>
   );
