@@ -64,4 +64,12 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - ~~Create express graphQL app for sample data~~
 - ~~Add Apollo Client to frontend~~
 - ~~Link database with products~~
-- Add subscription for cart
+- fix graphql refetch bug for Cart and navigation bar
+- Create removeCartItem hook
+- Check if increment and decrement cart item hooks work
+- Add cart hooks to cart page
+- Add input for item page so a specified amount can be added
+- Add payment page for cart
+- Add Stripe or Square to enable purchasing
+- Make resolvers and schema for orders on the backend
+- Update the profile page to show previous purchases

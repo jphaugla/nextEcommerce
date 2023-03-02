@@ -95,10 +95,25 @@ export const UPDATE_ITEM = gql`
 export const ADD_CART_ITEM = gql`
 mutation AddCartItem($itemId: ID!, $cartId: ID!, $quantity: Int!) {
   addCartItem(itemId: $itemId, cartId: $cartId, quantity: $quantity) {
-    quantity
-    id
-    name
-    stock
+    cartId
+    cartItems {
+      name
+      price
+      quantity
+      itemId
+      id
+      cartId
+      src
+      alt
+      stock
+      length
+      description
+      width
+      height
+      weight
+      discontinued
+      category
+    }
   }
 }
 `

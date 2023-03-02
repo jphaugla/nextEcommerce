@@ -12,6 +12,7 @@ type Product = {
 
 interface Props {
   product: Product;
+  handler: () => void;
 }
 
 const Rating = () => {
@@ -74,7 +75,7 @@ const Rating = () => {
   );
 };
 
-const PriceContainer: React.FC<Props> = ({ product }) => {
+const PriceContainer: React.FC<Props> = ({ product, handler }) => {
   return (
     <div className="h-24 bg-[#0e142d] text-white px-2 md:px-6 grid grid-cols-2">
       <div className="col-span-1 grid items-center pl-4">
@@ -90,7 +91,10 @@ const PriceContainer: React.FC<Props> = ({ product }) => {
       </div>
 
       <div className="grid place-items-center col-span-1">
-        <div className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg">
+        <div
+          onClick={handler}
+          className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg"
+        >
           Add to cart
         </div>
       </div>
@@ -98,7 +102,7 @@ const PriceContainer: React.FC<Props> = ({ product }) => {
   );
 };
 
-const RightContainer: React.FC<Props> = ({ product }) => {
+const RightContainer: React.FC<Props> = ({ product, handler }) => {
   return (
     <div className="col-span-1 flex flex-col-reverse sm:flex-col">
       <div className="grow overflow-y-scroll scrollbar-hide bg-[#2d3148] text-white flex flex-col gap-[24px]">
@@ -122,7 +126,7 @@ const RightContainer: React.FC<Props> = ({ product }) => {
         </div>
       </div>
 
-      <PriceContainer product={product} />
+      <PriceContainer product={product} handler={handler} />
     </div>
   );
 };

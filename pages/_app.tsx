@@ -3,11 +3,12 @@ import type { AppProps } from "next/app";
 import Navbar from "@/components/navbar/Navbar";
 import { SessionProvider } from "next-auth/react";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import client from "@/services/apollo-client";
 
-const client = new ApolloClient({
-  uri: "https://misty-night-9009.fly.dev/graphql",
-  cache: new InMemoryCache(),
-});
+// const client = new ApolloClient({
+//   uri: "https://misty-night-9009.fly.dev/graphql",
+//   cache: new InMemoryCache(),
+// });
 
 export default function App({
   Component,
