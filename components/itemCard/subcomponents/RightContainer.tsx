@@ -75,32 +75,6 @@ const Rating = () => {
   );
 };
 
-const PriceContainer: React.FC<Props> = ({ product, handler }) => {
-  return (
-    <div className="h-24 bg-[#0e142d] text-white px-2 md:px-6 grid grid-cols-2">
-      <div className="col-span-1 grid items-center pl-4">
-        <div>
-          <p className="text-3xl">
-            {product.price.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
-            })}
-          </p>
-          <p>Left in Stock: {product.stock}</p>
-        </div>
-      </div>
-
-      <div className="grid place-items-center col-span-1">
-        <div
-          onClick={handler}
-          className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg"
-        >
-          Add to cart
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const RightContainer: React.FC<Props> = ({ product, handler }) => {
   return (
@@ -130,5 +104,44 @@ const RightContainer: React.FC<Props> = ({ product, handler }) => {
     </div>
   );
 };
+
+
+const PriceContainer: React.FC<Props> = ({ product, handler }) => {
+  return (
+    <div className="h-24 bg-[#0e142d] text-white px-2 md:px-6 grid grid-cols-2">
+      <div className="col-span-1 grid items-center pl-4">
+        <div>
+          <p className="text-3xl">
+            {product.price.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            })}
+          </p>
+          <p>Left in Stock: {product.stock}</p>
+        </div>
+      </div>
+
+      <div className="grid place-items-center col-span-1">
+        <div
+          onClick={handler}
+          className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg"
+        >
+          Add to cart
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+
+
+
+
+
+
+
+
 
 export default RightContainer;
