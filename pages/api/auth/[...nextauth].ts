@@ -16,14 +16,14 @@ export const authOptions: AuthOptions = {
   ],
   secret: process.env.JWT_SECRET,
   adapter: PrismaAdapter(prisma),
-  callbacks: {
-    async redirect(params) {
-      console.log("Redirect url:", params.baseUrl)
-      console.log("env redirect:", process.env.BASE_REDIRECT_URL)
-      params.baseUrl = process.env.BASE_REDIRECT_URL!
-      return params.baseUrl;
-    },
-  },
+  // callbacks: {
+  //   async redirect(params) {
+  //     console.log("Redirect url:", params.baseUrl)
+  //     console.log("env redirect:", process.env.BASE_REDIRECT_URL)
+  //     params.baseUrl = process.env.BASE_REDIRECT_URL!
+  //     return params.baseUrl;
+  //   },
+  // },
   events: {
     createUser: async (message) => {
       const generatedCartId = uuidv4()
