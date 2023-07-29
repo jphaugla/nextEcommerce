@@ -1,30 +1,46 @@
-import { ApolloError, useQuery } from "@apollo/client";
+import { ApolloError, useQuery, useMutation } from "@apollo/client";
 import { GET_CART_BY_EMAIL } from "../gqlQueries/queries";
-import { useSession } from "next-auth/react";
+import { REMOVE_CART_ITEM } from "../gqlQueries/mutations";
 import React, { useEffect, useState } from 'react'
+import { useGetCartByEmail } from "./useGetCartByEmail";
 import { Cart, CartItem } from "@/types/cartItems";
+import client from "@/services/apollo-client";
 
-//Work on this
+export const useRemoveItem = (itemId: string) => {
+  const { session, cartItems } = useGetCartByEmail()
+  const [removeCartItem, { data, loading, error }] = useMutation(REMOVE_CART_ITEM, { refetchQueries: [{ query: GET_CART_BY_EMAIL }], });
 
-// export const useRemoveItem = () => {
-//   const { data: session, status: loadingSession } = useSession();
-//   const [email, setEmail] = useState("");
+  const handleRemoveCartItem = async () => {
+    if (!session || !cartItems) return;
+    const cartItem = cartItems.find((obj) => obj.id === itemId);
+    if (!cartItem) return;
+    const remainingCartItems = cartItems.filter(obj => obj.id !== itemId)
+    try {
+      const {
+        cartId,
+        itemId
+      } = cartItem
 
-//   useEffect(() => {
-//     const getEmail = async () => {
-//       if (!session?.user?.email) return;
-//       if (!(email === session.user.email)) {
-//         setEmail(session.user.email);
-//       }
-//     };
-//     getEmail()
-//   }, [session]);
+      let res = await removeCartItem({
+        variables: {
+          cartId,
+          itemId,
+        },
+      })
+      console.log("REMOVAL COMPLETE")
+      console.log("res.data.RemoveCartItem:", res.data.RemoveCartItem)
 
-//   const { loading: loadingGraphQL, error, data } = useQuery(GET_CART_BY_EMAIL, {
-//     variables: { email: email },
-//   });
+      if (res.data && res.data.RemoveCartItem) {
+        client.writeQuery({
+          query: GET_CART_BY_EMAIL,
+          variables: { email: session.user.email },
+          data: { getCartByEmail: res.data.RemoveCartItem },
+        });
+      }
+    } catch (err) {
+      console.log("error message:", err)
+    }
+  }
+  return { handleRemoveCartItem, loading, error, session };
+}
 
-//   let cartObj: Cart | null = data?.getCartByEmail
-//   const { cartId, cartItems } = cartObj || { cartId: null, cartItems: null }
-//   return { session, error, email, cartId, cartItems };
-// }

@@ -5,19 +5,54 @@ import { useGetCartByEmail } from "./useGetCartByEmail";
 import { useMutation } from "@apollo/client";
 
 export const useIncrementQuantity = (itemId: string) => {
-  const { error: queryError, session, cartId, cartItems } = useGetCartByEmail()
-  if (!cartItems) return
-  let cartItem = cartItems.filter(obj => obj.itemId = itemId)[0]
+  const { session, cartId, cartItems } = useGetCartByEmail()
 
   const [updateCartItem, { data, loading, error }] = useMutation(UPDATE_CART_ITEM, { refetchQueries: [{ query: GET_CART_BY_EMAIL }], });
   const handleIncrementCartItem = async () => {
-    if (!session) return
+    if (!session || !cartItems) return;
+    const cartItem = cartItems.find((obj) => obj.id === itemId);
+    console.log("Cart Item:", cartItem)
+    if (!cartItem) return;
     try {
+      const {
+        alt,
+        cartId,
+        category,
+        description,
+        discontinued,
+        height,
+        id,
+        itemId,
+        length,
+        name,
+        price,
+        quantity,
+        src,
+        stock,
+        weight,
+        width
+      } = cartItem
+      if (quantity === stock) {
+        return
+      }
       let res = await updateCartItem({
         variables: {
-          itemId: itemId,
-          cartId: cartId,
-          quantity: cartItem.quantity + 1,
+          alt,
+          cartId,
+          category,
+          description,
+          discontinued,
+          height,
+          id,
+          itemId,
+          length,
+          name,
+          price,
+          quantity: quantity + 1,
+          src,
+          stock,
+          weight,
+          width
         },
       })
       console.log("response:", res)

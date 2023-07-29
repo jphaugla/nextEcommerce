@@ -6,6 +6,9 @@ import { getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { NextPage } from "next/types";
 import type { User } from "next-auth";
+import { useDecrementQuantity } from "@/utils/hooks/useDecrementQuantity";
+import { useIncrementQuantity } from "@/utils/hooks/useIncrementQuantity";
+import { useRemoveItem } from "@/utils/hooks/useRemoveItem";
 
 interface Props {
   data: User;
@@ -15,6 +18,9 @@ interface CheckoutProps {
 }
 
 const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
+  const { handleDecrementCartItem } = useDecrementQuantity(cartItem.id);
+  const { handleIncrementCartItem } = useIncrementQuantity(cartItem.id);
+  const { handleRemoveCartItem } = useRemoveItem(cartItem.id);
   return (
     <tr className="w-full flex justify-evenly">
       <td className="px-1 sm:px-2 py-2 sm:whitespace-nowrap w-1/5">
@@ -48,11 +54,17 @@ const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap w-1/5 grid place-items-center">
         <div className="flex justify-center text-lg text-center">
           <div className="bg-gray-300 text-gray-600 p-2 rounded-lg flex justify-evenly w-24">
-            <div className="w-1/3 font-bold text-lg select-none cursor-pointer">
+            <div
+              className="w-1/3 font-bold text-lg select-none cursor-pointer "
+              onClick={handleDecrementCartItem}
+            >
               -
             </div>
             <div className="w-1/3 font-bold text-lg">{cartItem.quantity}</div>
-            <div className="w-1/3 font-bold text-lg select-none cursor-pointer">
+            <div
+              className="w-1/3 font-bold text-lg select-none cursor-pointer"
+              onClick={handleIncrementCartItem}
+            >
               +
             </div>
           </div>
@@ -65,7 +77,7 @@ const CheckoutItem: React.FC<CheckoutProps> = ({ cartItem }) => {
 
       <td className="px-1 sm:px-2 py-2 whitespace-nowrap grid place-items-center w-1/5">
         <div className="text-sm font-bold text-red-600 opacity-60 hover:opacity-90 cursor-pointer select-none  text-center">
-          <button onClick={() => console.log("hi")}>&#10006;</button>
+          <button onClick={handleRemoveCartItem}>&#10006;</button>
         </div>
       </td>
     </tr>
