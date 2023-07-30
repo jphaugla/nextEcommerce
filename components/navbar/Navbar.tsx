@@ -7,6 +7,7 @@ import AuthLinks from "./subcomponents/AuthLinks";
 import HamburgerMenu from "./subcomponents/HamburgerMenu";
 import CartIcon from "./subcomponents/CartIcon";
 import Sidebar from "../sidebar/Sidebar";
+import { useRouter } from "next/router";
 
 const Navbar: NextPage = () => {
   const { error, session, email, cartId, cartItems } = useGetCartByEmail();

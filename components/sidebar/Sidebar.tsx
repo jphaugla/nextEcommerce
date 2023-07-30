@@ -2,6 +2,7 @@ import React from "react";
 import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import type { Session } from "next-auth";
+import { useRouter } from "next/router";
 
 interface Props {
   handleShowSideMenu: () => void;
@@ -61,6 +62,14 @@ const SidebarSignOut = () => {
 };
 
 const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
+  const router = useRouter();
+  const handleRedirect = (href: string) => {
+    return function innerFunction() {
+      router.push(href);
+      handleShowSideMenu();
+    };
+  };
+
   return (
     <div className="absolute h-[100vh] w-[240px]  bg-[#111727] z-50 right-0 sm:hidden flex flex-col gap-[24px] rounded-tl-3xl rounded-bl-3xl">
       <div className="bg-[#343b48] flex py-4 pr-1 justify-end rounded-tl-3xl ">
@@ -89,7 +98,7 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
       </div>
       {session ? <SidebarSignOut /> : <SidebarSignIn />}
 
-      <Link href={"/"}>
+      <div onClick={handleRedirect("/")}>
         <div className="h-[60px] flex justify-center items-center gap-3 cursor-pointer text-center hover:bg-[#1a2031] hover:bg-opacity-70 text-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -101,9 +110,9 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
 
           <p>Home</p>
         </div>
-      </Link>
+      </div>
 
-      <Link href={"/contact"}>
+      <div onClick={handleRedirect("/contact")}>
         <div className="h-[60px] flex justify-center items-center gap-3 cursor-pointer text-center hover:bg-[#1a2031] hover:bg-opacity-70 text-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -114,10 +123,10 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
           </svg>
           <p>Contact</p>
         </div>
-      </Link>
+      </div>
 
       {session && (
-        <Link href={"/profile"}>
+        <div onClick={handleRedirect("/profile")}>
           <div className="h-[60px] flex justify-center items-center gap-3 cursor-pointer text-center hover:bg-[#1a2031] hover:bg-opacity-70 text-white">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -128,10 +137,10 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
             </svg>
             <p>Profile</p>
           </div>
-        </Link>
+        </div>
       )}
 
-      <Link href={"/about"}>
+      <div onClick={handleRedirect("/about")}>
         <div className="h-[60px] flex justify-center items-center gap-3 cursor-pointer text-center hover:bg-[#1a2031] hover:bg-opacity-70 text-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +152,7 @@ const Sidebar: React.FC<Props> = ({ handleShowSideMenu, session }) => {
 
           <p>About</p>
         </div>
-      </Link>
+      </div>
     </div>
   );
 };
