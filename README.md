@@ -52,7 +52,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - ~~Add a cart SVG in corner~~
 - ~~Add hamburger menu for navbar~~
 - ~~Create cart in database for each user~~
-- Create crud operations for database
+- ~~Create crud operations for database~~
 - ~~Create a cart page with a checkout link~~
 - Create checkout page
 - Integrate square with env variables
@@ -64,10 +64,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - ~~Create express graphQL app for sample data~~
 - ~~Add Apollo Client to frontend~~
 - ~~Link database with products~~
-- fix graphql refetch bug for Cart and navigation bar
-- Create removeCartItem hook
-- Check if increment and decrement cart item hooks work
-- Add cart hooks to cart page
+- ~~fix graphql refetch bug for Cart and navigation bar~~
+- ~~Create removeCartItem hook~~
+- ~~Check if increment and decrement cart item hooks work~~
+- ~~Add cart hooks to cart page~~
 - Add input for item page so a specified amount can be added
 - Add payment page for cart
 - Add Stripe or Square to enable purchasing
