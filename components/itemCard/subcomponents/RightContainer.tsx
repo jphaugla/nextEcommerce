@@ -1,5 +1,9 @@
-import React from "react";
-
+import React, { useEffect } from "react";
+import { useDecrementQuantity } from "@/utils/hooks/useDecrementQuantity";
+import { useIncrementQuantity } from "@/utils/hooks/useIncrementQuantity";
+import { useRemoveItem } from "@/utils/hooks/useRemoveItem";
+import { useAddItem } from "@/utils/hooks/useAddItem";
+import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
 type Product = {
   name: string;
   src: string;
@@ -12,7 +16,9 @@ type Product = {
 
 interface Props {
   product: Product;
-  handler: () => void;
+  qtyInCart: number;
+  handleModalAddItem: () => Promise<void>;
+  handleModalDecrementItem: () => Promise<void>;
 }
 
 const Rating = () => {
@@ -75,8 +81,12 @@ const Rating = () => {
   );
 };
 
-
-const RightContainer: React.FC<Props> = ({ product, handler }) => {
+const RightContainer: React.FC<Props> = ({
+  product,
+  qtyInCart,
+  handleModalAddItem,
+  handleModalDecrementItem,
+}) => {
   return (
     <div className="col-span-1 flex flex-col-reverse sm:flex-col">
       <div className="grow overflow-y-scroll scrollbar-hide bg-[#2d3148] text-white flex flex-col gap-[24px]">
@@ -100,13 +110,43 @@ const RightContainer: React.FC<Props> = ({ product, handler }) => {
         </div>
       </div>
 
-      <PriceContainer product={product} handler={handler} />
+      <PriceContainer
+        product={product}
+        qtyInCart={qtyInCart}
+        handleModalAddItem={handleModalAddItem}
+        handleModalDecrementItem={handleModalDecrementItem}
+      />
     </div>
   );
 };
 
+const PriceContainer: React.FC<Props> = ({
+  product,
+  qtyInCart,
+  handleModalAddItem,
+  handleModalDecrementItem,
+}) => {
+  // const { cartItems, session, error } = useGetCartByEmail();
+  // const { handleDecrementCartItem } = useDecrementQuantity(product.id);
+  // const { handleIncrementCartItem } = useIncrementQuantity(product.id);
+  // const { handleRemoveCartItem } = useRemoveItem(product.id);
+  // const { handleAddCartItem } = useAddItem(product.id);
 
-const PriceContainer: React.FC<Props> = ({ product, handler }) => {
+  // const handleIncrementItem = () => {
+  //   console.log("qtyInCart:", qtyInCart);
+  //   if (qtyInCart > 0) {
+  //     return handleModalIncrementItem();
+  //   } else {
+  //     return handleModalAddItem();
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   console.log("product", product);
+  //   console.log("session:", session);
+  //   console.log("error:", error);
+  // }, [product]);
+
   return (
     <div className="h-24 bg-[#0e142d] text-white px-2 md:px-6 grid grid-cols-2">
       <div className="col-span-1 grid items-center pl-4">
@@ -122,26 +162,31 @@ const PriceContainer: React.FC<Props> = ({ product, handler }) => {
       </div>
 
       <div className="grid place-items-center col-span-1">
-        <div
-          onClick={handler}
+        <div className="bg-gray-300 text-gray-600 px-2 py-3 rounded-lg flex justify-evenly w-24">
+          <div
+            className="w-1/3 font-bold text-lg select-none cursor-pointer text-center"
+            onClick={handleModalDecrementItem}
+          >
+            -
+          </div>
+          <div className="w-1/3 font-bold text-lg text-center">{qtyInCart}</div>
+          <div
+            className="w-1/3 font-bold text-lg select-none cursor-pointer text-center"
+            onClick={handleModalAddItem}
+          >
+            +
+          </div>
+        </div>
+
+        {/* <div
+          onClick={handleModalAddItem}
           className="bg-[#11111] border-solid border-2 border-white py-2 xxs:py-4 px-5 xxs:px-10 cursor-pointer rounded-lg"
         >
           Add to cart
-        </div>
+        </div> */}
       </div>
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
 
 export default RightContainer;

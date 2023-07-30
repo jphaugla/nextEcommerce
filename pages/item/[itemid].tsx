@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GetServerSideProps, NextPage } from "next";
 import ItemCard from "@/components/itemCard/ItemCard";
 import ErrorModalContainer from "@/components/modal/ErrorModalContainer";
@@ -7,6 +7,10 @@ import { useAddItem } from "@/utils/hooks/useAddItem";
 import { GET_ITEMS } from "@/utils/gqlQueries/queries";
 import { Product } from "@/types/items";
 import { ApolloError } from "@apollo/client";
+import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
+import { useDecrementQuantity } from "@/utils/hooks/useDecrementQuantity";
+import { useIncrementQuantity } from "@/utils/hooks/useIncrementQuantity";
+import { useRemoveItem } from "@/utils/hooks/useRemoveItem";
 
 interface Props {
   products: Product[];
@@ -21,9 +25,15 @@ const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
     error: cartErr,
     session,
   } = useAddItem(itemId);
+
   const [showModal, setShowModal] = useState(false);
   const [errSession, setErrSession] = useState("");
   const [errCart, setErrCart] = useState("");
+  const [cartItemId, setCartItemId] = useState("");
+  const [qtyInCart, setQtyInCart] = useState(0);
+
+  const { handleDecrementCartItem } = useDecrementQuantity(cartItemId);
+  const { handleIncrementCartItem } = useIncrementQuantity(cartItemId);
 
   useEffect(() => {
     if (!session) {
@@ -35,25 +45,57 @@ const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
 
   useEffect(() => {
     if (cartErr) {
-      setErrCart(cartErr.message);
+      setErrCart("Error with Cart");
       setShowModal(true);
     } else {
       setErrCart("");
     }
   }, [cartErr]);
 
-  const handleModal = async () => {
+  const { cartItems } = useGetCartByEmail();
+
+  useEffect(() => {
+    let currentItem = cartItems?.find((obj) => obj.itemId === itemId);
+    if (!!currentItem) {
+      setCartItemId(currentItem.id);
+      setQtyInCart(currentItem.quantity);
+    } else {
+      setCartItemId("");
+      setQtyInCart(0);
+    }
+    console.log("cartID:", cartItemId);
+    console.log("itemID:", itemId);
+  }, [cartItemId, cartItems]);
+
+  const handleModalAddItem = async () => {
     if (loading) return;
     if (!(errCart === "") || !(errSession === "")) {
       setShowModal(true);
     } else {
       try {
-        await handleAddCartItem(1);
+        if (qtyInCart > 0) {
+          await handleIncrementCartItem();
+        } else {
+          await handleAddCartItem(1);
+        }
       } catch (cartErr) {
         if (typeof cartErr === "string") setErrCart(cartErr as string);
       }
     }
   };
+  const handleModalDecrementItem = async () => {
+    if (loading) return;
+    if (!(errCart === "") || !(errSession === "")) {
+      setShowModal(true);
+    } else {
+      try {
+        await handleDecrementCartItem();
+      } catch (cartErr) {
+        if (typeof cartErr === "string") setErrCart(cartErr as string);
+      }
+    }
+  };
+
   const toggleModal = () => {
     setShowModal(!showModal);
   };
@@ -74,8 +116,10 @@ const ItemDetailCardPage: NextPage<Props> = ({ products, itemId }) => {
         {product && (
           <ItemCard
             product={product}
+            qtyInCart={qtyInCart}
             key={`Item-card-${product.id}`}
-            handler={handleModal}
+            handleModalAddItem={handleModalAddItem}
+            handleModalDecrementItem={handleModalDecrementItem}
           />
         )}
       </div>
