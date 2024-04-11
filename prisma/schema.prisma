@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("PLANETSCALE_URL")
+  provider     = "cockroachdb"
+  url          = env("COCKROACH_DB_URL")
   relationMode = "prisma"
 }
 
@@ -12,11 +12,11 @@ model Account {
   id                String  @id @default(cuid())
   userId            String
   providerAccountId String
-  access_token      String? @db.Text
+  access_token      String? 
   expires_at        Int?
-  id_token          String? @db.Text
+  id_token          String? 
   provider          String
-  refresh_token     String? @db.Text
+  refresh_token     String? 
   scope             String?
   session_state     String?
   token_type        String?
@@ -40,11 +40,11 @@ model Session {
 model Item {
   id           String     @id @default(cuid())
   name         String
-  src          String     @db.Text
+  src          String     
   price        Float
   alt          String
   stock        Int
-  description  String     @db.Text
+  description  String    
   length       Float
   width        Float
   height       Float
