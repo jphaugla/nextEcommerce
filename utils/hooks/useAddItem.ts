@@ -28,6 +28,8 @@ export function useAddItem(
       console.error("Error adding to cart:", err);
     }
   };
+  window.dispatchEvent(new Event("cartUpdated"));
+
 
   return { handleAddCartItem };
 }

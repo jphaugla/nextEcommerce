@@ -1,44 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
-import { NextPage } from "next/types";
-import TitleContainer from "./subcomponents/TitleContainer";
-import BaseLinks from "./subcomponents/BaseLinks";
-import AuthLinks from "./subcomponents/AuthLinks";
-import HamburgerMenu from "./subcomponents/HamburgerMenu";
-import CartIcon from "./subcomponents/CartIcon";
-import Sidebar from "../sidebar/Sidebar";
-import { useRouter } from "next/router";
 
-const Navbar: NextPage = () => {
-  const { error, session, email, cartId, cartItems } = useGetCartByEmail();
-  const [showSideMenu, setShowSideMenu] = React.useState<boolean>(false);
+const Navbar: React.FC = () => {
+  const { data: session, status } = useSession();
+  const { cartItems, refreshCart } = useGetCartByEmail();
 
+  // on auth
   useEffect(() => {
-    console.log("Email:", email);
-    console.log("cartId:", cartId);
-    console.log("cartItems:", cartItems);
-  }, [email, cartId]);
+    if (status === "authenticated") refreshCart();
+  }, [status, refreshCart]);
 
-  const handleShowSideMenu: () => void = () => {
-    setShowSideMenu(!showSideMenu);
-  };
+  // on any cartUpdated event
+  useEffect(() => {
+    const handler = () => refreshCart();
+    window.addEventListener("cartUpdated", handler);
+    return () => {
+      window.removeEventListener("cartUpdated", handler);
+    };
+  }, [refreshCart]);
+
+  const badgeCount = cartItems?.reduce((sum, i) => sum + i.quantity, 0) || 0;
 
   return (
-    <>
-      {showSideMenu && (
-        <Sidebar handleShowSideMenu={handleShowSideMenu} session={session} />
-      )}
-      <div className="flex justify-between px-2 py-4 bg-slate-100">
-        <TitleContainer />
-        <BaseLinks session={session} />
-        <AuthLinks session={session} cartItems={cartItems} />
-        <HamburgerMenu
-          session={session}
-          handleShowSideMenu={handleShowSideMenu}
-          cartItems={cartItems}
-        />
+    <nav className="flex justify-between p-4 bg-gray-800 text-white">
+      <Link href="/" className="text-2xl font-bold">MyStore</Link>
+      <div className="flex items-center space-x-4">
+        {status === "authenticated" ? (
+          <>
+            <Link href="/cart" className="relative text-xl">
+              🛒
+              {badgeCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 text-xs grid place-items-center">
+                  {badgeCount}
+                </span>
+              )}
+            </Link>
+            <span>{session.user?.email}</span>
+            <button onClick={() => signOut()} className="underline">Sign out</button>
+          </>
+        ) : (
+          <Link href="/api/auth/signin" className="underline">Sign in</Link>
+        )}
       </div>
-    </>
+    </nav>
   );
 };
 

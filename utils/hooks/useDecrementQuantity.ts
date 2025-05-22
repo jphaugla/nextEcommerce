@@ -6,112 +6,22 @@ import { useGetCartByEmail } from "./useGetCartByEmail";
 import { useMutation } from "@apollo/client";
 import client from "@/services/apollo-client";
 
-export const useDecrementQuantity = (itemId: string) => {
-  const { session, cartId, cartItems } = useGetCartByEmail()
-  const [updateCartItem, { data: dataUpdate, loading: loadingUpdate, error: errorUpdate }] = useMutation(UPDATE_CART_ITEM, { refetchQueries: [{ query: GET_CART_BY_EMAIL }], });
-  const [removeCartItem, { data: dataRemove, loading: loadingRemove, error: errorRemove }] = useMutation(REMOVE_CART_ITEM, { refetchQueries: [{ query: GET_CART_BY_EMAIL }], });
-
-  const loading = loadingRemove || loadingUpdate
-  const error = errorUpdate || errorRemove
-
+export function useDecrementQuantity(cartItemId: string | null) {
   const handleDecrementCartItem = async () => {
-    if (!session || !cartItems) return;
-    const cartItem = cartItems.find((obj) => obj.id === itemId);
-    console.log("Cart Item:", cartItem)
-    if (!cartItem) return;
-    try {
-      const {
-        alt,
-        cartId,
-        category,
-        description,
-        discontinued,
-        height,
-        id,
-        itemId,
-        length,
-        name,
-        price,
-        quantity,
-        src,
-        stock,
-        weight,
-        width
-      } = cartItem
-
-      if (quantity === 1) {
-        let res = await removeCartItem({
-          variables: {
-            cartId,
-            itemId,
-          },
-        })
-        if (res.data && res.data.RemoveCartItem) {
-          client.writeQuery({
-            query: GET_CART_BY_EMAIL,
-            variables: { email: session.user.email },
-            data: { getCartByEmail: res.data.RemoveCartItem },
-          });
-        }
-      } else {
-        let res = await updateCartItem({
-          variables: {
-            alt,
-            cartId,
-            category,
-            description,
-            discontinued,
-            height,
-            id,
-            itemId,
-            length,
-            name,
-            price,
-            quantity: quantity - 1,
-            src,
-            stock,
-            weight,
-            width
-          },
-        })
-        if (res.data && res.data.updateCartItem) {
-          const updatedCartData = res.data.updateCartItem;
-          console.log("res.data.updateCartItem:", res.data.updateCartItem)
-          client.writeQuery({
-            query: GET_CART_BY_EMAIL,
-            variables: { email: session.user.email },
-            data: { getCartByEmail: updatedCartData },
-          });
-        }
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    } catch (err) {
-      console.log("error message:", err)
+    if (!cartItemId) {
+      console.error("decrement: no cartItemId");
+      return;
     }
-  }
-  return { handleDecrementCartItem, loading, error, session };
+    const res = await fetch("/api/decrementCartItem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cartItemId }),
+    });
+    if (!res.ok) {
+      console.error("decrement failed:", await res.text());
+    }
+  };
+
+  return { handleDecrementCartItem };
 }
+
