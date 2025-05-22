@@ -63,6 +63,7 @@ model User {
   Account       Account[]
   Session       Session[]
   Cart          Cart?
+  orders        Order[]
 }
 
 model Cart {
@@ -93,4 +94,35 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+
+model Order {
+  id         String      @id @default(uuid())
+  userId     String      
+  createdAt  DateTime    @default(now())          // timestamp of placement
+  status     String      @default("PENDING")     // e.g. PENDING, COMPLETED, CANCELED
+  totalCents Int         // store money as integer cents to avoid float issues
+
+  items      OrderItem[]                              // line-items
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  itemId       String
+  quantity     Int
+  priceCents   Int      // snapshot of price *at* purchase time
+  description  String   // optional: snapshot of name/description
+  src          String   // optional: snapshot of image URL
+
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
 }

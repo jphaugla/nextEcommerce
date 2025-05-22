@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { NextPage, GetServerSideProps } from "next";
 import { useSession, signIn } from "next-auth/react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import { prisma } from "@/services/prisma-client";
 import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
@@ -16,12 +17,14 @@ interface CartItemWithProduct {
   id: string;
   itemId: string;
   quantity: number;
+  cartId: string;
   product?: Product;
 }
 
 const CheckoutItem: React.FC<{ item: CartItemWithProduct }> = ({ item }) => {
   const { product, quantity } = item;
   const price = product?.price ?? 0;
+
   return (
     <div className="flex justify-between p-4 border-b">
       <div>
@@ -50,8 +53,15 @@ const CheckoutItem: React.FC<{ item: CartItemWithProduct }> = ({ item }) => {
 };
 
 const CartPage: NextPage<CartPageProps> = ({ products }) => {
+  const router = useRouter();
   const { data: session, status } = useSession();
-  const { cartItems, loading: cartLoading } = useGetCartByEmail();
+  const {
+    cartItems,
+    cartId,
+    loading: cartLoading,
+    refreshCart,
+  } = useGetCartByEmail();
+
   const [itemsWithProduct, setItemsWithProduct] = useState<
     CartItemWithProduct[]
   >([]);
@@ -93,10 +103,7 @@ const CartPage: NextPage<CartPageProps> = ({ products }) => {
     return (
       <div className="p-8">
         <p>Your cart is empty.</p>
-        <Link
-          href="/"
-          className="mt-2 inline-block text-blue-600 underline"
-        >
+        <Link href="/" className="mt-2 inline-block text-blue-600 underline">
           Continue shopping
         </Link>
       </div>
@@ -110,17 +117,59 @@ const CartPage: NextPage<CartPageProps> = ({ products }) => {
   );
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="max-w-2xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl mb-4">Your Cart</h1>
+
       {itemsWithProduct.map((item) => (
         <CheckoutItem key={item.id} item={item} />
       ))}
-      <div className="text-right mt-6 font-bold">
+
+      <div className="text-right font-bold">
         Total:{" "}
         {total.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
         })}
+      </div>
+
+      <div className="flex justify-between mt-6">
+        <button
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          onClick={async () => {
+            if (!cartId) return;
+            await fetch("/api/cart/cancel", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ cartId }),
+            });
+            await refreshCart();
+            window.dispatchEvent(new Event("cartUpdated"));
+          }}
+        >
+          Cancel Cart
+        </button>
+
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          onClick={async () => {
+            if (!cartId) return;
+            const res = await fetch("/api/order/place", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ cartId }),
+            });
+            if (res.ok) {
+              const { order } = await res.json();
+              await refreshCart();
+              window.dispatchEvent(new Event("cartUpdated"));
+              router.push(`/orders/${order.id}`);
+            } else {
+              console.error("Place order failed:", await res.text());
+            }
+          }}
+        >
+          Place Order
+        </button>
       </div>
     </div>
   );
@@ -129,7 +178,7 @@ const CartPage: NextPage<CartPageProps> = ({ products }) => {
 export default CartPage;
 
 export const getServerSideProps: GetServerSideProps<CartPageProps> = async () => {
-  // Fetch all products directly from your local DB
+  // Fetch product catalog from your local DB
   const products = await prisma.item.findMany({
     orderBy: { name: "asc" },
   });
@@ -139,4 +188,3 @@ export const getServerSideProps: GetServerSideProps<CartPageProps> = async () =>
     },
   };
 };
-
