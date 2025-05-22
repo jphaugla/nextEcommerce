@@ -1,40 +1,34 @@
-import { ApolloError, useQuery, useMutation } from "@apollo/client";
-import React, { useEffect, useState } from 'react'
-import { Cart, CartItem } from "@/types/cartItems";
-import { ADD_CART_ITEM } from "../gqlQueries/mutations";
-import { GET_CART_BY_EMAIL } from "../gqlQueries/queries";
-import { useGetCartByEmail } from "./useGetCartByEmail";
-import client from "@/services/apollo-client";
+// utils/hooks/useAddItem.ts
 
-export const useAddItem = (itemId: string) => {
-  const { error: queryError, session, cartId } = useGetCartByEmail()
-  const [addCartItem, { data, loading, error }] = useMutation(ADD_CART_ITEM, {
-    refetchQueries: [{ query: GET_CART_BY_EMAIL }],
-  });
+export function useAddItem(
+  itemId: string,
+  session: any,
+  cartId: string | null
+) {
   const handleAddCartItem = async (quantity: number) => {
-    if (!session) return
+    console.log("🔔 useAddItem called", { itemId, quantity, session, cartId });
+    if (!session || !cartId) {
+      console.error("Cannot add item: no session or cartId");
+      return;
+    }
     try {
-      let res = await addCartItem({
-        variables: {
-          itemId: itemId,
-          cartId: cartId,
-          quantity: quantity,
-        },
-      },
-      )
-      const { data } = res
-      console.log("data:", data)
-      if (data && data.addCartItem) {
-        const updatedCart = data.addCartItem;
-        client.writeQuery({
-          query: GET_CART_BY_EMAIL,
-          variables: { email: session.user.email },
-          data: { getCartByEmail: updatedCart },
-        });
+      console.log("🔔 Sending POST /api/addCartItem");
+      const res = await fetch("/api/addCartItem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId, itemId, quantity }),
+      });
+      console.log("🔔 Response status:", res.status);
+      const payload = await res.json();
+      console.log("🔔 Response payload:", payload);
+      if (!res.ok || payload.error) {
+        console.error("addCartItem error:", payload.error || res.statusText);
       }
     } catch (err) {
-      console.log("error message:", err)
+      console.error("Error adding to cart:", err);
     }
-  }
-  return { handleAddCartItem, loading, error, session };
+  };
+
+  return { handleAddCartItem };
 }
+

@@ -6,6 +6,7 @@ import { GET_ITEMS } from "@/utils/gqlQueries/queries";
 import { Product } from "@/types/items";
 import { ApolloError } from "@apollo/client";
 import { GetServerSideProps } from "next";
+import { getSession } from "next-auth/react"; 
 
 interface Props {
   products: Product[];

@@ -10,6 +10,8 @@ import client from "@/services/apollo-client";
 //   cache: new InMemoryCache(),
 // });
 
+console.log("🐛 _app.tsx loaded");
+
 export default function App({
   Component,
   pageProps: { session, ...pageProps },

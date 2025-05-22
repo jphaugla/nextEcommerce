@@ -1,47 +1,56 @@
+// pages/api/getCart.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from "../../services/prisma-client"
+import { prisma } from '../../services/prisma-client'
 
-interface CartTableEntry {
-  id: string;
-  userId: string;
-}
-
-type ResData = {
+interface ResData {
   cartId?: string
   error?: string
 }
-interface ReqBodyType {
-  email: string;
+
+// Extend NextApiRequest to strongly type the request body
+export type MyCustomRequest = NextApiRequest & {
+  body: { email: string }
 }
-type Override<T1, T2> = Omit<T1, keyof T2> & T2;
-export type MyCustomRequest = Override<NextApiRequest, { body: ReqBodyType }>
 
 export default async function handler(
   req: MyCustomRequest,
   res: NextApiResponse<ResData>
 ) {
+  // Only allow POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   const { email } = req.body
-  let user = await prisma.user.findUnique({
-    where: {
-      email: email!,
-    },
-  });
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' })
+  }
+
+  // Find the user by email
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+
   if (!user) {
-    res.status(400).json({ error: 'No user found with session email' })
-  } else {
-    let cartId: CartTableEntry | null = await prisma.cart.findUnique({
-      where: {
-        userId: user.id,
-      },
-    });
-    if (cartId === null) {
-      res.status(400).json({ error: 'Could not retrieve cartid from database' })
-    } else {
-      if (!cartId?.id) {
-        res.status(400).json({ error: 'No id associated with cart entry' })
-      } else {
-        res.status(200).json({ cartId: cartId.id })
-      }
-    }
+    return res.status(400).json({ error: 'No user found with that email' })
+  }
+
+  try {
+    // Upsert the cart: create if missing, otherwise return existing
+    const cart = await prisma.cart.upsert({
+      where: { userId: user.id },
+      update: {},                    // no-op update
+      create: { userId: user.id }    // create new cart row
+    })
+
+    return res.status(200).json({ cartId: cart.id })
+  } catch (err) {
+    console.error('Error upserting cart:', err)
+    return res
+      .status(500)
+      .json({ error: 'Unable to retrieve or create cart' })
   }
 }
+

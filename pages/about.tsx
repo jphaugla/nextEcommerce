@@ -1,6 +1,8 @@
 import React from "react";
 import { NextPage } from "next";
 import Image from "next/image";
+import { getSession } from "next-auth/react";    // ← new
+
 
 interface TextBlockProps {
   styling: string;
@@ -76,3 +78,11 @@ const About: NextPage = () => {
 };
 
 export default About;
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const session = await getSession(ctx);
+  return {
+    props: {
+      session,  // injected into pageProps, picked up by SessionProvider
+    },
+  };
+};

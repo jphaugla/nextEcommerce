@@ -3,6 +3,7 @@ import { getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { NextPage } from "next/types";
 import type { User } from "next-auth";
+import { getSession } from "next-auth/react";
 
 interface Props {
   data: User;

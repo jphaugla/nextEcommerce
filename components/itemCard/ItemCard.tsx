@@ -5,6 +5,8 @@ import RightContainer from "./subcomponents/RightContainer";
 import { Product } from "../../types/items";
 import { ApolloError } from "@apollo/client";
 
+console.log("🐛 ItemCard module loaded"); 
+
 interface Props {
   product: Product;
   qtyInCart: number;

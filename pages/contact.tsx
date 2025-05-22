@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NextPage } from "next";
+import { getSession } from "next-auth/react";  
 
 interface Props {}
 
@@ -383,3 +384,11 @@ const Contact: NextPage<Props> = () => {
 };
 
 export default Contact;
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const session = await getSession(ctx);
+  return {
+    props: {
+      session,  // injected into pageProps, picked up by SessionProvider
+    },
+  };
+};
