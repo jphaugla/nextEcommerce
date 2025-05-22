@@ -4,8 +4,7 @@ import React, { useEffect, useState } from "react";
 import { NextPage, GetServerSideProps } from "next";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import client from "@/services/apollo-client";
-import { GET_ITEMS } from "@/utils/gqlQueries/queries";
+import { prisma } from "@/services/prisma-client";
 import { useGetCartByEmail } from "@/utils/hooks/useGetCartByEmail";
 import { Product } from "@/types/items";
 
@@ -33,8 +32,11 @@ const CheckoutItem: React.FC<{ item: CartItemWithProduct }> = ({ item }) => {
       </div>
       <div className="text-right">
         <p>
-          {price.toLocaleString("en-US", { style: "currency", currency: "USD" })} ×{" "}
-          {quantity}
+          {price.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+          })}{" "}
+          × {quantity}
         </p>
         <p className="font-semibold">
           {(price * quantity).toLocaleString("en-US", {
@@ -50,7 +52,9 @@ const CheckoutItem: React.FC<{ item: CartItemWithProduct }> = ({ item }) => {
 const CartPage: NextPage<CartPageProps> = ({ products }) => {
   const { data: session, status } = useSession();
   const { cartItems, loading: cartLoading } = useGetCartByEmail();
-  const [itemsWithProduct, setItemsWithProduct] = useState<CartItemWithProduct[]>([]);
+  const [itemsWithProduct, setItemsWithProduct] = useState<
+    CartItemWithProduct[]
+  >([]);
 
   // Merge product data when cartItems arrive
   useEffect(() => {
@@ -64,10 +68,12 @@ const CartPage: NextPage<CartPageProps> = ({ products }) => {
     }
   }, [status, cartItems, products]);
 
+  // Loading...
   if (status === "loading" || cartLoading) {
     return <div className="p-8">Loading your cart…</div>;
   }
 
+  // Not signed in
   if (!session) {
     return (
       <div className="p-8">
@@ -82,21 +88,22 @@ const CartPage: NextPage<CartPageProps> = ({ products }) => {
     );
   }
 
-if (itemsWithProduct.length === 0) {
-  return (
-    <div className="p-8">
-      <p>Your cart is empty.</p>
-      <Link
-        href="/"
-        className="mt-2 inline-block text-blue-600 underline"
-      >
-        Continue shopping
-      </Link>
-    </div>
-  );
-}
+  // Empty cart
+  if (itemsWithProduct.length === 0) {
+    return (
+      <div className="p-8">
+        <p>Your cart is empty.</p>
+        <Link
+          href="/"
+          className="mt-2 inline-block text-blue-600 underline"
+        >
+          Continue shopping
+        </Link>
+      </div>
+    );
+  }
 
-
+  // Compute total
   const total = itemsWithProduct.reduce(
     (sum, item) => sum + (item.product?.price ?? 0) * item.quantity,
     0
@@ -110,7 +117,10 @@ if (itemsWithProduct.length === 0) {
       ))}
       <div className="text-right mt-6 font-bold">
         Total:{" "}
-        {total.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+        {total.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        })}
       </div>
     </div>
   );
@@ -118,12 +128,15 @@ if (itemsWithProduct.length === 0) {
 
 export default CartPage;
 
-// We only need products on the server
 export const getServerSideProps: GetServerSideProps<CartPageProps> = async () => {
-  const { data } = await client.query({ query: GET_ITEMS });
+  // Fetch all products directly from your local DB
+  const products = await prisma.item.findMany({
+    orderBy: { name: "asc" },
+  });
   return {
     props: {
-      products: data.items,
+      products: JSON.parse(JSON.stringify(products)),
     },
   };
 };
+

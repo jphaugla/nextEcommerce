@@ -16,6 +16,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.pexel.com",
       },
+      {
+        protocol: "https",
+        hostname: "fakestoreapi.com",
+        port: "",        // optional, defaults to any
+        pathname: "/**"  // allow all paths
+      },
     ],
   },
 };
