@@ -159,3 +159,23 @@ model InventoryTransaction {
   @@index([inventoryId, createdAt])
 }
 
+model LoadRun {
+  id            String            @id @default(uuid())
+  userEmail     String            // who kicked it off
+  numSessions   Int
+  numOrders     Int
+  startTime     DateTime          @default(now())
+  endTime       DateTime?         
+  summaries     LoadRunSummary[]  @relation("LoadRunToSummary")
+}
+
+model LoadRunSummary {
+  id              String    @id @default(uuid())
+  run             LoadRun   @relation("LoadRunToSummary", fields: [runId], references: [id], onDelete: Cascade)
+  runId           String
+  username        String
+  ordersCompleted Int
+  startTime       DateTime
+  endTime         DateTime
+}
+

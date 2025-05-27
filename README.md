@@ -14,11 +14,16 @@ npm install
 
 ### if you want to run cockroachdb
 
-- create a new file called .env.local and set the COCKROACH_DB_URL environment variable 
+- create a new file called .env and set the COCKROACH_DB_URL environment variable 
+- make sure google authentication is set up and this is entered in .env as well
+- export the COCKROAH_DB_URL environment variable as well (this seems like a bug that this is needed)
 - apply schema changes and create tables
 ```bash
-edit .env/.env.local to add
+export COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
+edit .env to add
 COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
+GOOGLE_CLIENT_ID=some long number.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=some long number
 npx prisma migrate dev --name init
 ```
 

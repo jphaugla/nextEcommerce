@@ -5,7 +5,7 @@ import { prisma } from "@/services/prisma-client";
 type TransactionRow = {
   id: string;
   inventoryId: string;
-  itemName: string;      // ← new
+  itemName: string;      
   change: number;
   type: string;
   reference: string | null;
@@ -33,7 +33,7 @@ export const getServerSideProps: GetServerSideProps<TransactionsPageProps> = asy
   const rows: TransactionRow[] = raw.map((tx) => ({
     id:          tx.id,
     inventoryId: tx.inventoryId,
-    itemName:    tx.inventory.item.name,     // ← pull in the Item.name
+    itemName:    tx.inventory.item.name,
     change:      tx.change,
     type:        tx.type,
     reference:   tx.reference,
@@ -50,7 +50,7 @@ const TransactionsPage: NextPage<TransactionsPageProps> = ({ rows }) => (
       <thead className="bg-gray-100">
         <tr>
           <th className="border px-4 py-2">ID</th>
-          <th className="border px-4 py-2">Item</th>           {/* ← new */}
+          <th className="border px-4 py-2">Item</th>
           <th className="border px-4 py-2">Change</th>
           <th className="border px-4 py-2">Type</th>
           <th className="border px-4 py-2">Reference</th>
@@ -61,7 +61,7 @@ const TransactionsPage: NextPage<TransactionsPageProps> = ({ rows }) => (
         {rows.map((r) => (
           <tr key={r.id} className="even:bg-white odd:bg-gray-50">
             <td className="border px-4 py-2">{r.id}</td>
-            <td className="border px-4 py-2">{r.itemName}</td> {/* ← new */}
+            <td className="border px-4 py-2">{r.itemName}</td>
             <td className="border px-4 py-2">{r.change}</td>
             <td className="border px-4 py-2">{r.type}</td>
             <td className="border px-4 py-2">{r.reference}</td>

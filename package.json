@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node ./prisma/setup.js"
+    "restock": "node scripts/restock-run.js",
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@next-auth/mongodb-adapter": "^1.1.1",
@@ -19,6 +20,7 @@
     "concurrently": "^7.6.0",
     "eslint": "8.31.0",
     "eslint-config-next": "13.1.2",
+    "helpers": "^0.0.6",
     "mongodb": "^4.13.0",
     "next": "^15.3.2",
     "next-auth": "^4.18.10",
@@ -26,6 +28,7 @@
     "node-fetch": "^2.7.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "swr": "^2.3.3",
     "tailwind-scrollbar-hide": "^1.1.7",
     "typescript": "^5.1.0",
     "uuid": "^9.0.0"
@@ -41,13 +44,5 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
-  },
-  "scripts": {
-    "dev": "next dev",             
-    "build": "next build",        
-    "start": "next start",        
-    "lint": "next lint",         
-    "restock": "node scripts/restock-run.js",  
-    "seed":    "node prisma/seed.js"          
   }
 }
