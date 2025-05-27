@@ -1,5 +1,3 @@
-// components/navbar/Navbar.tsx
-
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -48,6 +46,17 @@ const Navbar: React.FC = () => {
           <Link href="/orders" className="hover:underline">
             Order History
           </Link>
+        )}
+        {/* Inventory management links */}
+        {session && (
+          <>
+            <Link href="/inventory" className="hover:underline">
+              Inventory
+            </Link>
+            <Link href="/inventory-transactions" className="hover:underline">
+              Inventory Transactions
+            </Link>
+          </>
         )}
       </div>
 

@@ -52,6 +52,7 @@ model Item {
   discontinued Boolean
   category     String
   CartItem     CartItem[]
+  inventories  Inventory[]
 }
 
 model User {
@@ -126,3 +127,35 @@ model OrderItem {
 
   @@index([orderId])
 }
+/// prisma/schema.prisma
+
+model Inventory {
+  id             String      @id @default(uuid())
+  itemId         String
+  onHand         Int         @default(0)          // available stock
+  reserved       Int         @default(0)          // stock allocated to unpaid orders
+  threshold      Int         @default(10)     // when to trigger restock
+  restockAmount  Int         @default(50)     // how many to add
+  lastAdjustedAt DateTime    @updatedAt            // when onHand or reserved last changed
+
+  item           Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  /// audit log of all adjustments
+  transactions   InventoryTransaction[]
+
+  @@unique([itemId])
+}
+
+model InventoryTransaction {
+  id            String      @id @default(uuid())
+  inventoryId   String
+  change        Int         // positive to add, negative to remove
+  type          String      // e.g. "SALE", "RESTOCK", "CANCEL", "ADJUSTMENT"
+  reference     String?     // e.g. orderId or admin-adjustment note
+  createdAt     DateTime    @default(now())
+
+  inventory     Inventory   @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId, createdAt])
+}
+
