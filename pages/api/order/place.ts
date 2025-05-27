@@ -1,9 +1,8 @@
 // pages/api/order/place.ts
-
 import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "@/services/prisma-client";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { prisma } from "@/services/prisma-client";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,28 +13,19 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // 1) Authenticate the user
+  // 1) Authenticate
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.email) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
-  // 2) Lookup Prisma User record
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-  if (!user) {
-    return res.status(400).json({ error: "User not found" });
-  }
-
-  // 3) Validate request body
   const { cartId } = req.body as { cartId?: string };
   if (!cartId) {
     return res.status(400).json({ error: "cartId is required" });
   }
 
   try {
-    // 4) Fetch all items in the cart, including product data
+    // 2) Lookup cart and its items
     const cartItems = await prisma.cartItem.findMany({
       where: { cartId },
       include: { item: true },
@@ -44,61 +34,105 @@ export default async function handler(
       return res.status(400).json({ error: "Cart is empty" });
     }
 
-    // 5) Compute total price in cents
+    // 3) Compute total
     const totalCents = cartItems.reduce(
       (sum, ci) => sum + ci.quantity * Math.round(ci.item.price * 100),
       0
     );
 
-    // 6) Perform transaction: create Order, adjust inventory, clear cart
+    // 4) Transaction: create order, adjust inventory, clear cart
     const order = await prisma.$transaction(async (tx) => {
-      // 6a) Create the Order and OrderItems
+      // 4a) Create the order + items
       const newOrder = await tx.order.create({
         data: {
-          userId: user.id,
+          userId: session.user.id,
           totalCents,
           items: {
             create: cartItems.map((ci) => ({
-              itemId: ci.itemId,
-              quantity: ci.quantity,
-              priceCents: Math.round(ci.item.price * 100),
+              itemId:      ci.itemId,
+              quantity:    ci.quantity,
+              priceCents:  Math.round(ci.item.price * 100),
               description: ci.item.description,
-              src: ci.item.src,
+              src:         ci.item.src,
             })),
           },
         },
       });
 
-      // 6b) For each cart item, decrement onHand & reserved and log transaction
+      // 4b) For each cart item, adjust inventory safely
       await Promise.all(
-        cartItems.map((ci) =>
-          tx.inventory.update({
-            where: {
-              // assume unique([itemId, location]) and location is null for global
-              itemId: ci.itemId,
-            },
-            data: {
-              onHand:    { decrement: ci.quantity },
-              reserved:  { decrement: ci.quantity },
-              transactions: {
-                create: {
-                  change: -ci.quantity,
-                  type: "SALE",
-                  reference: newOrder.id,
+        cartItems.map(async (ci) => {
+          // fetch current onHand & reserved
+          const inv = await tx.inventory.findUnique({
+            where: { itemId: ci.itemId },
+            select: { id: true, onHand: true, reserved: true },
+          });
+          if (!inv) {
+            throw new Error(`Inventory record not found for item ${ci.itemId}`);
+          }
+
+          // how much we can actually sell
+          const sellQty = Math.min(inv.onHand, ci.quantity);
+
+          // how much we can release from reserved
+          const releaseQty = Math.min(inv.reserved, ci.quantity);
+
+          //  i) if we sold some, decrement onHand & reserved and log SALE
+          if (sellQty > 0) {
+            await tx.inventory.update({
+              where: { id: inv.id },
+              data: {
+                onHand:   { decrement: sellQty },
+                reserved: { decrement: releaseQty },
+                transactions: {
+                  create: {
+                    change:    -sellQty,
+                    type:      "SALE",
+                    reference: newOrder.id,
+                  },
                 },
               },
-            },
-          })
-        )
+            });
+          }
+
+          // ii) if we couldn’t sell the full requested ci.quantity, release any leftover reservation
+          const leftover = ci.quantity - sellQty;
+          if (leftover > 0) {
+            // release any reserved above what we sold
+            if (releaseQty > sellQty) {
+              await tx.inventory.update({
+                where: { id: inv.id },
+                data: {
+                  reserved: { decrement: releaseQty - sellQty },
+                  transactions: {
+                    create: {
+                      change:    -(releaseQty - sellQty),
+                      type:      "RELEASE",
+                      reference: ci.cartId,
+                    },
+                  },
+                },
+              });
+            }
+            // log OUT_OF_STOCK
+            await tx.inventoryTransaction.create({
+              data: {
+                inventoryId: inv.id,
+                change:      0,
+                type:        "OUT_OF_STOCK",
+                reference:   newOrder.id,
+              },
+            });
+          }
+        })
       );
 
-      // 6c) Clear the cart
+      // 4c) Clear the cart
       await tx.cartItem.deleteMany({ where: { cartId } });
 
       return newOrder;
     });
 
-    // 7) Return the newly created order
     return res.status(201).json({ order });
   } catch (err: any) {
     console.error("Place order error:", err);
