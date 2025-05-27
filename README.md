@@ -1,101 +1,135 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 # Links
-- https://squarenext.vercel.app/
+- https://squarenext.example.com/
 
 ## Getting Started
 
 ### clone repository
 ```bash
 git clone https://github.com/jphaugla/nextEcommerce.git
+cd nextEcommerce
 ```
+
 ### install dependencies
-npm install
-
-### if you want to run cockroachdb
-
-- create a new file called .env and set the COCKROACH_DB_URL environment variable 
-- make sure google authentication is set up and this is entered in .env as well
-- export the COCKROAH_DB_URL environment variable as well (this seems like a bug that this is needed)
-- apply schema changes and create tables
 ```bash
-export COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
-edit .env to add
-COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
-GOOGLE_CLIENT_ID=some long number.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=some long number
-npx prisma migrate dev --name init
+npm install
 ```
 
-run the development server:
+### CockroachDB setup
 
+1. Create a new file called `.env` with:
+   ```env
+   COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
+   GOOGLE_CLIENT_ID=<your-google-client-id>
+   GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+   ```
+2. Apply schema changes and create tables:
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+
+### run the development server
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Technical Overview
+
+This project provides:
+
+- **User authentication** via NextAuth and Google.
+- **Shopping cart** and **checkout** backed by Prisma + CockroachDB.
+- **Inventory management** with real-time `onHand` and `reserved` counts, plus an audit log (`InventoryTransaction`).
+- A custom **“Generate Load”** page to simulate concurrent load against the system:
+
+  - **Parameters**:  
+    - **Sessions**: number of parallel user sessions.  
+    - **Orders per Session**: how many orders each session will place.  
+    - **Restock Interval**: total orders across all sessions before automatic restock.
+  - **Behavior**:  
+    1. Spins up N sessions, each inserting random cart items and placing orders.  
+    2. Session 0 tracks its completed-order count and, every `floor(restockInterval / sessions)` orders, triggers a restock.  
+    3. Restocks top up any SKU whose `onHand` has fallen below its own `threshold`, using that row’s `restockAmount`, and log a `RESTOCK` in `InventoryTransaction`.  
+    4. Built-in retry logic handles CockroachDB write-conflicts on hot inventory rows.
+
+### Key Prisma Models
+
+```prisma
+model Inventory {
+  id             String      @id @default(uuid())
+  itemId         String      @unique
+  onHand         Int         @default(0)
+  reserved       Int         @default(0)
+  threshold      Int         @default(10)
+  restockAmount  Int         @default(50)
+  lastAdjustedAt DateTime    @updatedAt
+  transactions   InventoryTransaction[]
+}
+
+model InventoryTransaction {
+  id            String    @id @default(uuid())
+  inventoryId   String
+  change        Int
+  type          String
+  reference     String?
+  createdAt     DateTime  @default(now())
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Generate-Load Page Flow
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+1. **User inputs** “Sessions”, “Orders per Session”, and “Restock Interval” (defaults: 5, 10, 200).  
+2. These values are **persisted** in `localStorage` so they survive reloads.  
+3. On **Start Load**, the page POSTs to `/api/generate-load`.  
+4. Internally, the handler:
+   - Preloads all product `Item` rows.  
+   - Creates a `LoadRun` record.  
+   - Spawns N parallel loops (“sessions”), each:
+     1. Upserts a fake user & their cart.  
+     2. For each order:  
+        - Picks 1–8 random SKUs with random quantities.  
+        - Reserves stock (`reserved += qty`).  
+        - Creates an `Order` + `OrderItem` snapshot.  
+        - Either sells (`onHand -= qty; reserved -= qty; log SALE`) or, if out of stock, **releases** the reservation and logs both `RELEASE` and `OUT_OF_STOCK` in one atomic update.  
+        - Clears the cart.  
+     3. Session 0, every `floor(restockInterval/sessions)` orders, runs `restockIfNeeded()`:
+        - Finds all Inventory rows with `onHand < threshold`.  
+        - Increments each `onHand` by its `restockAmount` and logs `RESTOCK`.  
+   - Each transactional block is wrapped in a **retryable** helper that retries CockroachDB write-conflicts up to 5 times with exponential back-off.  
+5. Results are summarized per session in a `LoadRunSummary` table and polled back to the UI.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+This approach ensures controlled, configurable load testing, automatic restocks, and accurate real-time inventory tracking.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## API Routes
 
+- **`GET /api/load-summary?runId=…`**  
+  Returns JSON array of `{ username, ordersCompleted, startTime, endTime }` for the given load run.
+- **`POST /api/generate-load?user=…`**  
+  Body: `{ numSessions, numOrders, restockInterval }`  
+  Kicks off the load routine described above.
+
+---
+
+## Development Notes
+
+- To reset **all** reserved counts in CockroachDB without safe-update errors:
+  ```sql
+  UPDATE "Inventory"
+  SET "reserved" = 0
+  WHERE true;
+  ```
+- Prisma logging is configured to suppress raw SQL; enable `"query"` in the client’s `log` settings if you need to troubleshoot.
+
+---
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-To learn about cockroachDB and prisma
-- [cockroachdb prisma](https://www.cockroachlabs.com/docs/stable/build-a-nodejs-app-with-cockroachdb-prisma)
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-
-# TO DO:
-- ~~Fix navbar link displays~~
-- ~~Add uuid for sample Data to do Key~~
-- ~~Create Sidebar~~
-- ~~Get Icons for Sidebar Component~~
-- ~~Style Sidebar Component~~
-- ~~Create individual product pages~~
-- ~~Link a database to next-auth~~
-- ~~Add a cart SVG in corner~~
-- ~~Add hamburger menu for navbar~~
-- ~~Create cart in database for each user~~
-- ~~Create crud operations for database~~
-- ~~Create a cart page with a checkout link~~
-- Create checkout page
-- Integrate square with env variables
-- ~~Create a contact page~~
-- Create a profile page
-- ~~Create an about page~~ 
-- ~~Add 2xl breakpoint in CSS~~
-- ~~Make homepage responsive in 2xl~~
-- ~~Create express graphQL app for sample data~~
-- ~~Add Apollo Client to frontend~~
-- ~~Link database with products~~
-- ~~fix graphql refetch bug for Cart and navigation bar~~
-- ~~Create removeCartItem hook~~
-- ~~Check if increment and decrement cart item hooks work~~
-- ~~Add cart hooks to cart page~~
-- Add input for item page so a specified amount can be added
-- Add payment page for cart
-- Add Stripe or Square to enable purchasing
-- Make resolvers and schema for orders on the backend
-- Update the profile page to show previous purchases
+- [Next.js Documentation](https://nextjs.org/docs)  
+- [CockroachDB + Prisma Guide](https://www.cockroachlabs.com/docs/stable/build-a-nodejs-app-with-cockroachdb-prisma)  
+- [Prisma Client API](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference)
