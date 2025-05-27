@@ -10,6 +10,8 @@ type InventoryRow = {
   itemName: string;
   onHand: number;
   reserved: number;
+  restockAmount: number;
+  threshold: number;
   lastAdjustedAt: string;
 };
 
@@ -28,6 +30,8 @@ export const getServerSideProps: GetServerSideProps<InventoryPageProps> = async 
     itemName:       i.item.name,
     onHand:         i.onHand,
     reserved:       i.reserved,
+    restockAmount:  i.restockAmount,
+    threshold:      i.threshold,
     lastAdjustedAt: i.lastAdjustedAt.toISOString(),
   }));
   return { props: { rows } };
@@ -75,6 +79,8 @@ const InventoryPage: NextPage<InventoryPageProps> = ({ rows }) => {
             <th className="border px-4 py-2">Name</th>
             <th className="border px-4 py-2">On Hand</th>
             <th className="border px-4 py-2">Reserved</th>
+            <th className="border px-4 py-2">Restock Amount</th>
+            <th className="border px-4 py-2">Threshold</th>
             <th className="border px-4 py-2">Last Adjusted</th>
           </tr>
         </thead>
@@ -85,6 +91,8 @@ const InventoryPage: NextPage<InventoryPageProps> = ({ rows }) => {
               <td className="border px-4 py-2">{r.itemName}</td>
               <td className="border px-4 py-2">{r.onHand}</td>
               <td className="border px-4 py-2">{r.reserved}</td>
+              <td className="border px-4 py-2">{r.restockAmount}</td>
+              <td className="border px-4 py-2">{r.threshold}</td>
               <td className="border px-4 py-2">
                 {new Date(r.lastAdjustedAt).toLocaleString()}
               </td>
