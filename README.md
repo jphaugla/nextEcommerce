@@ -13,7 +13,7 @@ Basic homepage listing products, using `getServerSideProps` to fetch items from 
 ---
 
 ### Product Detail Page
-![Product Detail](images/product.png)
+![Product Detail](images/Home.png)
 
 *File: `pages/items/[id].tsx`*  
 Dynamic route for individual product, using `getStaticPaths` + `getStaticProps` to pre-render pages.
@@ -21,7 +21,7 @@ Dynamic route for individual product, using `getStaticPaths` + `getStaticProps` 
 ---
 
 ### Cart Page
-![Cart Page](images/cart.png)
+![Cart Page](images/Cart.png)
 
 *File: `pages/cart.tsx`*  
 Interactive cart showing items in your cart, quantities, and checkout button. Uses API routes to add/remove items.
@@ -29,7 +29,7 @@ Interactive cart showing items in your cart, quantities, and checkout button. Us
 ---
 
 ### Order History
-![Orders Page](images/orders.png)
+![Orders Page](images/OrderHistory.png)
 
 *File: `pages/orders.tsx`*  
 Protected page listing past orders for the signed-in user, fetched in `getServerSideProps`.
@@ -54,7 +54,7 @@ Shows audit log of inventory adjustments, loaded via `getServerSideProps` from `
 ---
 
 ### Generate Load
-![Generate Load](images/generate-load.png)
+![Generate Load](images/GenerateLload.png)
 
 *File: `pages/generate-load.tsx`*  
 UI to simulate concurrent sessions placing orders. Parameters persisted in `localStorage`.  
