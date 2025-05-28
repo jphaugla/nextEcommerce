@@ -5,7 +5,7 @@ This is the **NextEcommerce** demo: a Next.js + CockroachDB + Prisma storefront 
 ## Screenshots
 
 ### Home Page
-![Home Page](images/home.png)
+![Home Page](images/Home.png)
 
 *File: `pages/index.tsx`*  
 Basic homepage listing products, using `getServerSideProps` to fetch items from Prisma and render a grid of product cards.
@@ -54,7 +54,7 @@ Shows audit log of inventory adjustments, loaded via `getServerSideProps` from `
 ---
 
 ### Generate Load
-![Generate Load](images/GenerateLload.png)
+![Generate Load](images/GenerateLoad.png)
 
 *File: `pages/generate-load.tsx`*  
 UI to simulate concurrent sessions placing orders. Parameters persisted in `localStorage`.  
