@@ -1,5 +1,6 @@
 // pages/api/items/update.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma, runWithRetry } from "@/utils/db";
 import { prisma } from "@/services/prisma-client";
 
 export default async function handler(
@@ -9,7 +10,8 @@ export default async function handler(
   if (req.method !== "PUT") return res.status(405).end();
   try {
     const { id, ...data } = req.body;
-    const item = await prisma.item.update({ where: { id }, data });
+    const item = await runWithRetry(tx =>
+      tx.item.update({ where: { id }, data });
     return res.status(200).json({ item });
   } catch (err: any) {
     console.error("update item error:", err);

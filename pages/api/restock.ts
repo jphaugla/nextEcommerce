@@ -1,6 +1,6 @@
 // pages/api/restock.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 const LOW_STOCK_LIMIT = 10;   // match your seed/defaults
 const RESTOCK_AMOUNT  = 50;
@@ -21,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 2) Restock and log transaction
     await Promise.all(
       low.map((inv) =>
-        prisma.inventory.update({
+        runWithRetry(tx =>
+          tx.inventory.update({
           where: { id: inv.id },
           data: {
             onHand: { increment: RESTOCK_AMOUNT },
@@ -33,7 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               },
             },
           },
-        })
+        }),
+        "restock"
+      )
       )
     );
 

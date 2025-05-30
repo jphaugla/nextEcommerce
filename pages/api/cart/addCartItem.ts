@@ -3,7 +3,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Tx: upsert cartItem + adjust inventory reserved + log transaction
     const [cartItem, inventory] = await prisma.$transaction([
       // 1) add or increment the cart item
-      prisma.cartItem.upsert({
+      runWithRetry(tx =>
+        tx.cartItem.upsert({
         where: { cartId_itemId: { cartId, itemId } },
         update: { quantity: { increment: quantity } },
         create: { cartId, itemId, quantity },

@@ -1,7 +1,7 @@
 // pages/api/getCart.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../services/prisma-client'
+import { prisma, runWithRetry } from "@/utils/db";
 
 interface ResData {
   cartId?: string
@@ -39,11 +39,13 @@ export default async function handler(
 
   try {
     // Upsert the cart: create if missing, otherwise return existing
-    const cart = await prisma.cart.upsert({
+    const cart = await runWithRetry (tx =>
+      tx.cart.upsert({
       where: { userId: user.id },
       update: {},                    // no-op update
       create: { userId: user.id }    // create new cart row
     })
+  );
 
     return res.status(200).json({ cartId: cart.id })
   } catch (err) {

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,7 +15,8 @@ export default async function handler(
   }
 
   try {
-    const item = await prisma.cartItem.update({
+    const item = await runWithRetry(tx =>
+      tx.cartItem.update({
       where: { id: cartItemId },
       data: {
         quantity: {
@@ -23,6 +24,7 @@ export default async function handler(
         },
       },
     });
+    );
     return res.status(200).json({ success: true, item });
   } catch (err: any) {
     console.error("decrementCartItem error:", err);

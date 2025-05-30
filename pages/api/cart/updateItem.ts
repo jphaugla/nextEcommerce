@@ -1,6 +1,6 @@
 // pages/api/cart/updateItem.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,10 +9,12 @@ export default async function handler(
   if (req.method !== "POST") return res.status(405).end();
   const { cartItemId, quantity } = req.body;
   try {
-    const item = await prisma.cartItem.update({
+    const item = await runWithRetry(tx =>
+      tx.cartItem.update({
       where: { id: cartItemId },
       data: { quantity },
     });
+    );
     return res.status(200).json({ item });
   } catch (err: any) {
     console.error("updateCartItem error:", err);

@@ -1,7 +1,7 @@
 // pages/api/addCartItem.ts
 
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 type ReqBody = {
   cartId: string;
@@ -29,11 +29,13 @@ export default async function handler(
 
   try {
     // Upsert a CartItem: if one exists for this cart+item, update quantity; otherwise create
-    const item = await prisma.cartItem.upsert({
+    const item = await runWithRetry(tx => 
+      tx.cartItem.upsert({
       where: { cartId_itemId: { cartId, itemId } },
       update: { quantity: { increment: quantity } },
       create: { cartId, itemId, quantity },
-    });
+    }),
+    );
 
     return res.status(200).json({ success: true, item });
   } catch (err: any) {

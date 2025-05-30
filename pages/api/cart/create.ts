@@ -1,6 +1,6 @@
 // pages/api/cart/create.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/services/prisma-client";
+import { prisma, runWithRetry } from "@/utils/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -20,13 +20,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // 2) Upsert their Cart
-  const cart = await prisma.cart.upsert({
+  const cart = await runWithRetry(tx =>
+    tx.cart.upsert({
     where: { userId: user.id },
     update: {},
     create: {
       userId: user.id,
     },
   });
+  );
 
   return res.status(200).json({ cartId: cart.id });
 }
