@@ -22,8 +22,35 @@ npm install
    GOOGLE_CLIENT_ID=<your-google-client-id>
    GOOGLE_CLIENT_SECRET=<your-google-client-secret>
    ```
+When doing this on a self managed cloud provider cluster, there are additional necessary 
+   ```env
+   COCKROACH_DB_URL="postgresql://jhaugland:jasonrocks@jhaug-east2-private-nlb-fd43cbfa6b362538.elb.us-east-2.amazonaws.com:26257/ecommerce?sslmode=disable"
+   GOOGLE_CLIENT_ID=<your-google-client-id>
+   GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+   NEXTAUTH_URL=http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000
+   ```
+2. Set up google [OAuth client ID credentials](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
+   - Open the Google Cloud Console → APIs & Services → Credentials
+   - Find your OAuth 2.0 Client ID (the “Web application” entry). 
+     - if running local this is Redirect URI:
+     ```bash
+     http://localhost:3000/api/auth/callback/google
+     ```
+     - if running local this is JavaScript origin:
+     ```bash
+     http://localhost:3000
+     ```
+     - if running in self managed Redirect URI:
+     ```bash
+     http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000/api/auth/callback/google
+     ```
+     - if running in self managed JavaScript origin:
+     ```bash
+     http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com
+     ```
 2. Apply schema changes and create tables:
    ```bash
+   source .env
    npx prisma migrate dev --name init
    ```
 
