@@ -17,12 +17,14 @@ npm install
 ### CockroachDB setup
 
 1. Create a new file called `.env` with:
+NOTE:  subsequent steps explain how to setup the two google environment variables
    ```env
    COCKROACH_DB_URL="postgresql://root@localhost:26257/ecommerce?insecure"
    GOOGLE_CLIENT_ID=<your-google-client-id>
    GOOGLE_CLIENT_SECRET=<your-google-client-secret>
    ```
-When doing this on a self managed cloud provider cluster, there are additional necessary 
+When doing this on a self managed cloud provider cluster, there are additional necessary steps
+NOTE:  the NEXTAUTH_URL is the DNS name of your cloud application VM. for AWS will look like *http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com*   However, old AWS regions like us-east-1 do not work as their DNS name doesn't *qualify* for GCP authorization.  These old regions will loook like *ec2-whatever-ip-is.compute-1.amazonaws.com*.  The error message in the Google Cloud authorization is *Invalid Redirect: must use a domain that is a valid top private domain*
    ```env
    COCKROACH_DB_URL="postgresql://jhaugland:jasonrocks@jhaug-east2-private-nlb-fd43cbfa6b362538.elb.us-east-2.amazonaws.com:26257/ecommerce?sslmode=disable"
    GOOGLE_CLIENT_ID=<your-google-client-id>
@@ -32,21 +34,21 @@ When doing this on a self managed cloud provider cluster, there are additional n
 2. Set up google [OAuth client ID credentials](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
    - Open the Google Cloud Console → APIs & Services → Credentials
    - Find your OAuth 2.0 Client ID (the “Web application” entry). 
-     - if running local this is Redirect URI:
-     ```bash
-     http://localhost:3000/api/auth/callback/google
-     ```
-     - if running local this is JavaScript origin:
+     - if running local this is *Authorized JavaScript Origin*:
      ```bash
      http://localhost:3000
      ```
-     - if running in self managed Redirect URI:
+     - if running *local* this is *Redirect URIs*:
+     ```bash
+     http://localhost:3000/api/auth/callback/google
+     ```
+     - if running *self managed in the cloud* this is *Authorized JavaScript Origin:*
+     ```bash
+     http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000
+     ```
+     - if running in *self managed in the cloud* this is *Redirect URIs*:
      ```bash
      http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000/api/auth/callback/google
-     ```
-     - if running in self managed JavaScript origin:
-     ```bash
-     http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com
      ```
 2. Apply schema changes and create tables:
    ```bash
@@ -59,6 +61,8 @@ When doing this on a self managed cloud provider cluster, there are additional n
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+or 
+Open [http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000](http:///ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000)
 
 ---
 
@@ -271,3 +275,6 @@ Cart badge count:
 - [Next.js Documentation](https://nextjs.org/docs)  
 - [CockroachDB + Prisma Guide](https://www.cockroachlabs.com/docs/stable/build-a-nodejs-app-with-cockroachdb-prisma)  
 - [Prisma Client API](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference)
+- [Prisma ORM](https://www.prisma.io/docs/orm)
+- [Terraform/Ansible Deployment github](https://github.com/jphaugla/crdb-terraform-ansible)
+- [Google OAuth client setup](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
