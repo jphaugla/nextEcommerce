@@ -64,6 +64,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 or 
 Open [http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000](http:///ec2-blah-blah-blah.us-east-2.compute.amazonaws.com:3000)
 
+### run the load from prompt
+The load can be kicked off from the application but is also set up to run as a script.  To run as a script
+```bash
+npm run load
+```
+
+Can edit the load parameters by changing this line *"load": "node scripts/run-load.js 5 2000 40",* in [package.json](package.json)
+where 5 is number of sessions, 2000 is number of orders per session, and 40 is restock interval
 ---
 
 ## Technical Overview
