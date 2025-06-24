@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "restock": "node scripts/restock-run.js",
-    "load": "node scripts/run-load.js 5 2000 80",
+    "load": "node scripts/run-load.js 3 2000 80",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

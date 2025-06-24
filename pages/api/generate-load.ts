@@ -124,6 +124,8 @@ export default async function handler(
           .map((it) => ({ ...it, rnd: Math.random() }))
           .sort((a, b) => a.rnd - b.rnd)
           .slice(0, count);
+	// ✏️ enforce a stable order by primary key to avoid lock‐order cycles:
+        picked.sort((a, b) => a.id.localeCompare(b.id));
 
         await runWithRetry(async (tx) => {
           // A Reserve each item
