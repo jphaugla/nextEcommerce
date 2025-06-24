@@ -20,6 +20,7 @@ export async function runWithRetry<T>(
     try {
       const result = await prisma.$transaction(txFn, {
         isolationLevel: 'Serializable',
+        timeout: 60_000,    // <— allow 60 s per transaction (default 5 s)
       });
       console.info(`✔︎ tx${tag} id=${txId} succeeded on attempt ${attempt}`);
       return result;
