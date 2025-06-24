@@ -23,8 +23,9 @@ NOTE:  subsequent steps explain how to setup the two google environment variable
    GOOGLE_CLIENT_ID=<your-google-client-id>
    GOOGLE_CLIENT_SECRET=<your-google-client-secret>
    ```
-When doing this on a self managed cloud provider cluster, there are additional necessary steps
+When deploying this application on a cloud provider, there are additional steps
 NOTE:  the NEXTAUTH_URL is the DNS name of your cloud application VM. for AWS will look like *http://ec2-blah-blah-blah.us-east-2.compute.amazonaws.com*   However, old AWS regions like us-east-1 do not work as their DNS name doesn't *qualify* for GCP authorization.  These old regions will loook like *ec2-whatever-ip-is.compute-1.amazonaws.com*.  The error message in the Google Cloud authorization is *Invalid Redirect: must use a domain that is a valid top private domain*
+ADDITIONAL NOTE:  if running multi-region only run the *npx prisma migrate dev* command on one of the application nodes.  The other steps need to be done on all regional applications.
    ```env
    COCKROACH_DB_URL="postgresql://jhaugland:jasonrocks@jhaug-east2-private-nlb-fd43cbfa6b362538.elb.us-east-2.amazonaws.com:26257/ecommerce?sslmode=disable"
    GOOGLE_CLIENT_ID=<your-google-client-id>
