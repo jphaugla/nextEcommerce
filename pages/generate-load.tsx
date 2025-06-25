@@ -1,178 +1,107 @@
-// pages/generate-load.tsx
-import { NextPage } from "next";
-import { useState, useEffect } from "react";
-import useSWR from "swr";
+// pages/api/generate-load.ts
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma, runWithRetry } from "@/utils/db";
+import { randomInt } from "crypto";
 
-type Summary = {
-  username: string;
-  ordersCompleted: number;
-  startTime: string;
-  endTime: string;
-};
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // … validation & preload allItems & loadRun same as before …
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+  // Launch sessions in parallel
+  await Promise.all(
+    Array.from({ length: numSessions }).map(async (_, idx) => {
+      // … upsert user & cart …
 
-const RUN_ID_KEY            = "generateLoadLastRunId";
-const SESSIONS_KEY          = "generateLoadSessions";
-const ORDERS_KEY            = "generateLoadOrders";
-const RESTOCK_INTERVAL_KEY  = "generateLoadRestockInterval";
+      for (let orderIndex = 0; orderIndex < numOrders; orderIndex++) {
+        const picked = /* your random pick logic */ [];
 
-const GenerateLoadPage: NextPage = () => {
-  // 1) Load persisted params or use defaults
-  const [sessions, setSessions] = useState(() => {
-    const v = localStorage.getItem(SESSIONS_KEY);
-    return v ? Number(v) : 5;
-  });
-  const [orders, setOrders] = useState(() => {
-    const v = localStorage.getItem(ORDERS_KEY);
-    return v ? Number(v) : 10;
-  });
-  const [restockInterval, setRestockInterval] = useState(() => {
-    const v = localStorage.getItem(RESTOCK_INTERVAL_KEY);
-    return v ? Number(v) : 200;
-  });
+        // 1) Reserve stock & add to cart
+        await runWithRetry(
+          (tx) =>
+            Promise.all(
+              picked.map(({ id: itemId, stock }) => {
+                const qty = stock > 1 ? randomInt(1, 4) : 1;
+                return tx.cartItem.upsert({
+                  where: { cartId_itemId: { cartId: cart.id, itemId } },
+                  update: { quantity: { increment: qty } },
+                  create: { cartId: cart.id, itemId, quantity: qty },
+                })
+                .then(() =>
+                  tx.inventory.update({
+                    where: { itemId },
+                    data: {
+                      reserved: { increment: qty },
+                      transactions: {
+                        create: {
+                          change: qty,
+                          type: "RESERVE",
+                          reference: cart.id,
+                        },
+                      },
+                    },
+                  })
+                );
+              })
+            ),
+          "reserve-cart",
+          { timeoutMs: 10_000 }
+        );
 
-  const [runId, setRunId] = useState<string | null>(null);
-  const [running, setRunning] = useState(false);
+        // 2) Create order + items
+        const newOrder = await runWithRetry(
+          (tx) => {
+            const totalCents = picked.reduce(...);
+            return tx.order.create({
+              data: {
+                userId: user.id,
+                totalCents,
+                items: {
+                  create: picked.map(({ id, description, src, price }) => ({
+                    itemId: id,
+                    quantity: 1,
+                    priceCents: Math.round(price * 100),
+                    description,
+                    src,
+                  })),
+                },
+              },
+            });
+          },
+          "create-order",
+          { timeoutMs: 10_000 }
+        );
 
-  // 2) On mount, rehydrate runId
-  useEffect(() => {
-    const storedRunId = localStorage.getItem(RUN_ID_KEY);
-    if (storedRunId) {
-      setRunId(storedRunId);
-    }
-  }, []);
+        // 3) Adjust onHand/reserved *and* clear cart
+        //    (we actually split: first adjust inventory, *then* clear cart)
+        await runWithRetry(
+          async (tx) => {
+            await Promise.all(
+              picked.map(async ({ id: itemId }) => {
+                const inv = await tx.inventory.findUnique({ where: { itemId } });
+                if (!inv) return;
 
-  // 3) Persist each param whenever it changes
-  useEffect(() => {
-    localStorage.setItem(SESSIONS_KEY, String(sessions));
-  }, [sessions]);
-  useEffect(() => {
-    localStorage.setItem(ORDERS_KEY, String(orders));
-  }, [orders]);
-  useEffect(() => {
-    localStorage.setItem(RESTOCK_INTERVAL_KEY, String(restockInterval));
-  }, [restockInterval]);
+                if (inv.onHand > 0) {
+                  const sellQty = Math.min(inv.onHand, 1);
+                  await tx.inventory.update({ /* decrement onHand & reserved */ });
+                } else {
+                  await tx.inventory.update({ /* release & out-of-stock logs */ });
+                }
+              })
+            );
+          },
+          "settle-inventory",
+          { timeoutMs: 20_000 }
+        );
 
-  // 4) Fetch summaries for the current (or last) run
-  const { data: rows, error } = useSWR<Summary[]>(
-    runId ? `/api/load-summary?runId=${runId}` : null,
-    fetcher,
-    { refreshInterval: 3000 }
-  );
+        await runWithRetry(
+          (tx) => tx.cartItem.deleteMany({ where: { cartId: cart.id } }),
+          "clear-cart",
+          { timeoutMs: 5_000 }
+        );
 
-  // 5) Stop the “Running” state once all sessions report in
-  useEffect(() => {
-    if (running && rows && rows.length === sessions) {
-      setRunning(false);
-    }
-  }, [running, rows, sessions]);
-
-  // 6) Kick off a new load run
-  const handleRun = async () => {
-    setRunning(true);
-    setRunId(null); // hide old summary while starting
-
-    const res = await fetch(
-      `/api/generate-load?user=${encodeURIComponent("admin@cockroachlabs.com")}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          numSessions:     sessions,
-          numOrders:       orders,
-          restockInterval, 
-        }),
+        // optional restock trigger…
       }
-    );
-
-    if (!res.ok) {
-      console.error("Failed to start load:", await res.text());
-      setRunning(false);
-      return;
-    }
-    const { runId: newRunId } = await res.json();
-    localStorage.setItem(RUN_ID_KEY, newRunId);
-    setRunId(newRunId);
-  };
-
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Generate Load</h1>
-
-      <div className="flex space-x-4 mb-6">
-        <label>
-          Sessions:
-          <input
-            type="number"
-            min={1}
-            value={sessions}
-            onChange={(e) => setSessions(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-
-        <label>
-          Orders per Session:
-          <input
-            type="number"
-            min={1}
-            value={orders}
-            onChange={(e) => setOrders(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-
-        <label>
-          Restock Interval:
-          <input
-            type="number"
-            min={1}
-            value={restockInterval}
-            onChange={(e) => setRestockInterval(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-
-        <button
-          onClick={handleRun}
-          disabled={running}
-          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-        >
-          {running ? "Running…" : "Start Load"}
-        </button>
-      </div>
-
-      {error && <p className="text-red-500">Error loading summaries.</p>}
-
-      {rows && rows.length > 0 && (
-        <table className="min-w-full table-auto border-collapse border border-gray-300">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-4 py-2">Username</th>
-              <th className="border px-4 py-2">Orders Completed</th>
-              <th className="border px-4 py-2">Start Time</th>
-              <th className="border px-4 py-2">End Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.username}>
-                <td className="border px-4 py-2">{r.username}</td>
-                <td className="border px-4 py-2">{r.ordersCompleted}</td>
-                <td className="border px-4 py-2">
-                  {new Date(r.startTime).toLocaleString()}
-                </td>
-                <td className="border px-4 py-2">
-                  {new Date(r.endTime).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    })
   );
-};
 
-export default GenerateLoadPage;
+  // … finalize LoadRun & return …
+}
