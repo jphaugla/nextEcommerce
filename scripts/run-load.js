@@ -4,24 +4,31 @@ const { PrismaClient } = require('@prisma/client');
 const { randomInt } = require('crypto');
 const { v4: uuid } = require('uuid');
 
-// A helper that wraps tx functions with retry and per-tx logging
-async function runWithRetry(fn, tag, retries = 3) {
+const client = new PrismaClient();
+
+/**
+ * Wrap a transaction fn with retry + session-aware logging.
+ * @param {Function} fn       - A function receiving the PrismaClient (or tx) to run.
+ * @param {string}   tag      - A short name for this tx, e.g. 'reserve-cart'.
+ * @param {number}   retries  - How many times to retry on conflict.
+ * @param {number?}  sessionId- If provided, prefixes logs with [S<sessionId>].
+ */
+async function runWithRetry(fn, tag, retries = 3, sessionId = null) {
   const txId = uuid().slice(0, 6);
   for (let attempt = 1; attempt <= retries; attempt++) {
-    console.log(`▶ Starting tx [${tag}] id=${txId} attempt=${attempt}`);
+    const prefix = sessionId ? `[S${sessionId}] ` : '';
+    console.log(`${prefix}▶ Starting tx [${tag}] id=${txId} attempt=${attempt}`);
     try {
       const result = await fn(client);
-      console.log(`✔︎ tx [${tag}] id=${txId} succeeded on attempt ${attempt}`);
+      console.log(`${prefix}✔︎ tx [${tag}] id=${txId} succeeded on attempt ${attempt}`);
       return result;
     } catch (err) {
-      console.warn(`⚠️ [${tag}] id=${txId} attempt ${attempt} failed: ${err.message}`);
+      console.warn(`${prefix}⚠️ [${tag}] id=${txId} attempt ${attempt} failed: ${err.message}`);
       if (attempt === retries) throw err;
       await new Promise((r) => setTimeout(r, 500 * attempt));
     }
   }
 }
-
-const client = new PrismaClient();
 
 async function spawnRun(runId, initiator, numSessions, numOrders, restockInterval) {
   console.log(`› Preloading products…`);
@@ -59,7 +66,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
     );
   }
 
-  // Create LoadRun record
+  // Create LoadRun
   await runWithRetry(
     (tx) =>
       tx.loadRun.create({
@@ -73,15 +80,20 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
   // Parallel sessions
   await Promise.all(
     Array.from({ length: numSessions }).map(async (_, idx) => {
+      const sessionId = idx + 1;
       const username =
         idx === 0
           ? initiator
           : `${String(randomInt(0, 2000)).padStart(4, '0')}@cockroachlabs.com`;
 
-      console.log(`\n--- Session ${idx + 1}/${numSessions}: ${username} ---`);
+      // Bind sessionId into a small helper
+      const sessionRetry = (fn, tag, retries) =>
+        runWithRetry(fn, tag, retries, sessionId);
+
+      console.log(`[S${sessionId}] --- Session ${sessionId}/${numSessions}: ${username} ---`);
 
       // Upsert user
-      const user = await runWithRetry(
+      const user = await sessionRetry(
         (tx) =>
           tx.user.upsert({
             where: { email: username },
@@ -92,7 +104,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
       );
 
       // Upsert cart
-      const cart = await runWithRetry(
+      const cart = await sessionRetry(
         (tx) =>
           tx.cart.upsert({
             where: { userId: user.id },
@@ -113,7 +125,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
           .slice(0, randomInt(1, 9));
 
         // A) Reserve
-        await runWithRetry(
+        await sessionRetry(
           async (tx) => {
             await Promise.all(
               picked.map(({ id: itemId, stock }) => {
@@ -137,7 +149,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
         );
 
         // B) Create order
-        const newOrder = await runWithRetry(
+        const newOrder = await sessionRetry(
           (tx) =>
             tx.order.create({
               data: {
@@ -158,7 +170,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
         );
 
         // C&D) Adjust inventory & clear cart
-        await runWithRetry(
+        await sessionRetry(
           async (tx) => {
             await Promise.all(
               picked.map(async ({ id: itemId }) => {
@@ -217,7 +229,7 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
       }
 
       // Write summary
-      await runWithRetry(
+      await sessionRetry(
         (tx) =>
           tx.loadRunSummary.create({
             data: {
@@ -233,11 +245,9 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
     })
   );
 
-  // === CLEANUP PASS: release any stray reservations ===
+  // === CLEANUP PASS ===
   console.log('› Cleaning up stray reservations…');
-  // Remove any leftover cart items
   await client.cartItem.deleteMany({});
-  // Atomically push reserved back into onHand and zero reserved
   await client.$executeRawUnsafe(`
     UPDATE "Inventory"
     SET "onHand" = "onHand" + "reserved",
@@ -247,16 +257,14 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
 
   // === ORDER-STATUS PROMOTION PASS ===
   console.log('› Promoting some order statuses…');
-
-  // 1) Promote oldest 40% of PENDING → PROCESSING
   const totalPending = await client.order.count({ where: { status: 'PENDING' } });
   const toProcess    = Math.floor(totalPending * 0.4);
   if (toProcess > 0) {
     const pendingOrders = await client.order.findMany({
       where:   { status: 'PENDING' },
-      orderBy: { createdAt: 'asc' },    // oldest first
-      take:     toProcess,
-      select:  { id: true }
+      orderBy: { createdAt: 'asc' },
+      take:    toProcess,
+      select:  { id: true },
     });
     await Promise.all(
       pendingOrders.map(({ id }) =>
@@ -265,16 +273,14 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
     );
     console.log(`  • ${toProcess} PENDING → PROCESSING`);
   }
-
-  // 2) Promote oldest 30% of PROCESSING → FULFILLED
   const totalProc = await client.order.count({ where: { status: 'PROCESSING' } });
   const toFulfill = Math.floor(totalProc * 0.3);
   if (toFulfill > 0) {
     const procOrders = await client.order.findMany({
       where:   { status: 'PROCESSING' },
       orderBy: { createdAt: 'asc' },
-      take:     toFulfill,
-      select:  { id: true }
+      take:    toFulfill,
+      select:  { id: true },
     });
     await Promise.all(
       procOrders.map(({ id }) =>
@@ -284,8 +290,8 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
     console.log(`  • ${toFulfill} PROCESSING → FULFILLED`);
   }
 
-  // Finalize run
-  console.log(`› Finalizing LoadRun…`);
+  // === FINALIZE RUN ===
+  console.log('› Finalizing LoadRun…');
   await runWithRetry(
     (tx) => tx.loadRun.update({ where: { id: runId }, data: { endTime: new Date() } }),
     'finalize-run'
@@ -313,3 +319,4 @@ async function main() {
 }
 
 main();
+
