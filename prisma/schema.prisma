@@ -165,6 +165,7 @@ model LoadRun {
   userEmail     String            // who kicked it off
   numSessions   Int
   numOrders     Int
+  failed        Int       @default(0)
   startTime     DateTime          @default(now())
   endTime       DateTime?         
   cancelled     Boolean @default(false)

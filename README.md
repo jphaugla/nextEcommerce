@@ -77,7 +77,7 @@ The load can be kicked off from the application but is also set up to run as a s
 npm run load
 ```
 
-Can edit the load parameters by changing this line *"load": "node scripts/run-load.js 5 2000 40",* in [package.json](package.json)
+Can edit the load parameters by changing this line *load:node scripts/run-load.js 5 2000 40,* in [package.json](package.json)
 where 5 is number of sessions, 2000 is number of orders per session, and 40 is restock interval
 ---
 

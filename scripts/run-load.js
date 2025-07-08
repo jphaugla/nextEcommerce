@@ -7,10 +7,10 @@ const { v4: uuid }      = require('uuid');
 const client = new PrismaClient();
 
 /**
- * Retry wrapper: fn must be a zero-arg async function.
+ * Wrap a zero-arg async fn with retry + session-aware logging.
  * Retries on any error message matching deadlock/conflict/serialization/please retry.
  */
-async function runWithRetry(fn, tag, retries = 3, sessionId = null) {
+async function runWithRetry(fn, tag, retries = 5, sessionId = null, incrementFailed) {
   const txId = uuid().slice(0,6);
   const retryRegex = /deadlock|conflict|serialization failure|please retry your transaction/i;
 
@@ -18,27 +18,34 @@ async function runWithRetry(fn, tag, retries = 3, sessionId = null) {
     const prefix = sessionId ? `[S${sessionId}] ` : '';
     console.log(`${prefix}▶ Starting tx [${tag}] id=${txId} attempt=${attempt}`);
     try {
-      const result = await fn();            // invoke your zero-arg block
+      const result = await fn();
       console.log(`${prefix}✔︎ tx [${tag}] id=${txId} succeeded on attempt ${attempt}`);
       return result;
     } catch (err) {
       const msg = err.message || '';
       const transient = retryRegex.test(msg);
-      if (!transient) {
-        console.error(`${prefix}❌ tx [${tag}] id=${txId} failed (non-retriable): ${msg}`);
+      if (!transient || attempt === retries) {
+        // count this as a permanent failure
+        console.error(`${prefix}❌ tx [${tag}] id=${txId} failed${transient ? ` after ${retries} attempts` : ''}: ${msg}`);
+        if (incrementFailed) await incrementFailed();
         throw err;
       }
       console.warn(`${prefix}⚠️ tx [${tag}] id=${txId} conflict on attempt ${attempt}: ${msg}`);
-      if (attempt === retries) {
-        console.error(`${prefix}❌ tx [${tag}] id=${txId} failed after ${retries} attempts`);
-        throw err;
-      }
+      // back off
       await new Promise(r => setTimeout(r, 500 * attempt));
     }
   }
 }
 
 async function spawnRun(runId, initiator, numSessions, numOrders, restockInterval) {
+  // helper to bump the `failed` counter on LoadRun
+  const incrementFailed = async () => {
+    await client.loadRun.update({
+      where: { id: runId },
+      data:  { failed: { increment: 1 } }
+    });
+  };
+
   console.log(`› Preloading products…`);
   const allItems = await client.item.findMany({
     select: { id: true, stock: true, price: true, description: true, src: true },
@@ -65,29 +72,39 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
           })
         )
       ),
-      'restock'
+      'restock',
+      5,
+      null,
+      incrementFailed
     );
   }
 
-  // Create LoadRun record
+  // Create LoadRun with failed=0
   await runWithRetry(
     () => client.loadRun.create({
-      data: { id: runId, userEmail: initiator, numSessions, numOrders },
+      data: { id: runId, userEmail: initiator, numSessions, numOrders, failed: 0 },
     }),
-    'load-run-init'
+    'load-run-init',
+    5,
+    null,
+    incrementFailed
   );
 
   const perSessionRestock = Math.max(1, Math.floor(restockInterval / numSessions));
 
-  // Run all sessions in parallel
+  // Run sessions in parallel, but stagger their start by up to 500ms
   await Promise.all(
     Array.from({ length: numSessions }).map(async (_, idx) => {
       const sessionId = idx + 1;
+      // stagger start
+      await new Promise(r => setTimeout(r, randomInt(0, 500)));
+
       const username = idx === 0
         ? initiator
         : `${String(randomInt(0,2000)).padStart(4,'0')}@cockroachlabs.com`;
 
-      const sessionRetry = (fn, tag) => runWithRetry(fn, tag, 3, sessionId);
+      const sessionRetry = (fn, tag) =>
+        runWithRetry(fn, tag, 5, sessionId, incrementFailed);
 
       console.log(`[S${sessionId}] --- Session ${sessionId}/${numSessions}: ${username} ---`);
 
@@ -150,21 +167,19 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
             data: {
               userId: user.id,
               totalCents: picked.reduce((s, { price }) => s + Math.round(price*100), 0),
-              items: {
-                create: picked.map(({ id, description, src, price }) => ({
-                  itemId: id,
-                  quantity: 1,
-                  priceCents: Math.round(price*100),
-                  description,
-                  src,
-                })),
-              },
+              items: { create: picked.map(({ id, description, src, price }) => ({
+                itemId: id,
+                quantity: 1,
+                priceCents: Math.round(price*100),
+                description,
+                src,
+              })) },
             },
           }),
           'create-order'
         );
 
-        // C&D) Adjust inventory & clear cart inside a transaction—fully retried on conflict
+        // C&D) Adjust inventory & clear cart inside one $transaction
         await sessionRetry(
           () => client.$transaction(async tx => {
             for (const { id: itemId } of picked) {
@@ -180,7 +195,9 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
                   data: {
                     onHand: { decrement: 1 },
                     reserved: { decrement: 1 },
-                    transactions: { create: { change: -1, type: 'SALE', reference: newOrder.id } }
+                    transactions: {
+                      create: { change: -1, type: 'SALE', reference: newOrder.id }
+                    }
                   }
                 });
               } else {
@@ -271,7 +288,10 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
   console.log('› Finalizing LoadRun…');
   await runWithRetry(
     () => client.loadRun.update({ where: { id: runId }, data: { endTime: new Date() } }),
-    'finalize-run'
+    'finalize-run',
+    5,
+    null,
+    incrementFailed
   );
 }
 
