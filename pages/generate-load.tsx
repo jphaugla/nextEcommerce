@@ -1,4 +1,3 @@
-// pages/generate-load.tsx
 import React, { useState, useEffect } from "react";
 import type { NextPage } from "next";
 import useSWR from "swr";
@@ -18,11 +17,11 @@ const RESTOCK_INTERVAL_KEY = "generateLoadRestockInterval";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const GenerateLoadPage: NextPage = () => {
-  const [sessions, setSessions]           = useState<number>(5);
-  const [orders, setOrders]               = useState<number>(10);
+  const [sessions, setSessions]               = useState<number>(5);
+  const [orders, setOrders]                   = useState<number>(10);
   const [restockInterval, setRestockInterval] = useState<number>(200);
-  const [runId, setRunId]                 = useState<string | null>(null);
-  const [running, setRunning]             = useState<boolean>(false);
+  const [runId, setRunId]                     = useState<string | null>(null);
+  const [running, setRunning]                 = useState<boolean>(false);
 
   // On mount, hydrate from localStorage
   useEffect(() => {
@@ -42,10 +41,12 @@ const GenerateLoadPage: NextPage = () => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(SESSIONS_KEY, String(sessions));
   }, [sessions]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(ORDERS_KEY, String(orders));
   }, [orders]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(RESTOCK_INTERVAL_KEY, String(restockInterval));
@@ -81,11 +82,13 @@ const GenerateLoadPage: NextPage = () => {
         }),
       }
     );
+
     if (!res.ok) {
       console.error("Failed to start load:", await res.text());
       setRunning(false);
       return;
     }
+
     const { runId: newRun } = await res.json();
     window.localStorage.setItem(RUN_ID_KEY, newRun);
     setRunId(newRun);
@@ -167,4 +170,3 @@ const GenerateLoadPage: NextPage = () => {
 };
 
 export default GenerateLoadPage;
-

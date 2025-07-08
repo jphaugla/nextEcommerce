@@ -4,64 +4,71 @@ const fetch = require("node-fetch");    // npm install node-fetch@2
 const prisma = new PrismaClient();
 
 const STARTING_STOCK = 50;
-// how many pages to fetch (20 items/page by default)
-const PAGES = 5;
+const PAGE_SIZE    = 20;    // fakestore’s fixed page size
+const DESIRED      = 200;   // total items you want
 
 async function fetchPage(page) {
-  const res = await fetch(`https://fakestoreapi.com/products?limit=20&page=${page}`);
+  const res = await fetch(`https://fakestoreapi.com/products?limit=${PAGE_SIZE}&page=${page}`);
   if (!res.ok) throw new Error(`Failed to fetch page ${page}`);
   return res.json();
 }
 
 async function main() {
-  // 1) Fetch all pages in parallel
-  const pages = await Promise.all(
-    Array.from({ length: PAGES }, (_, i) => fetchPage(i + 1))
-  );
-  // 2) Flatten into one big array
-  const rawItems = pages.flat();
+  // 1) Fetch the 20 real items
+  const rawItems = await fetchPage(1);
+  console.log(`🔄 Fetched ${rawItems.length} real items from fakestoreapi`);
 
-  console.log(`🔄 Fetched ${rawItems.length} items from fakestoreapi`);
+  // 2) Compute how many times to repeat them
+  const copies = Math.ceil(DESIRED / rawItems.length);
 
-  for (const it of rawItems) {
-    const id = String(it.id + (it.pageOffset || 0)); 
-    // If the API reuses ids each page, you can offset them:
-    // const id = `${page}-${it.id}`;
+  // 3) Build exactly DESIRED clones, marking originals on copyIndex 0
+  const allItems = Array.from({ length: copies })
+    .flatMap((_, copyIndex) =>
+      rawItems.map(it => ({
+        ...it,
+        cloneId    : `${it.id}-${copyIndex}`,     // unique ID
+        isOriginal : copyIndex === 0,             // true only for original batch
+      }))
+    )
+    .slice(0, DESIRED);
 
-    // Upsert the Item
+  console.log(`🔄 Generating ${allItems.length} total items by cloning`);
+
+  // 4) Upsert each into Item + Inventory
+  for (const it of allItems) {
     await prisma.item.upsert({
-      where: { id },
+      where: { id: it.cloneId },
       update: {},
       create: {
-        id,
-        name: it.title,
-        src: it.image,
-        alt: it.title,
-        price: it.price,
-        stock: STARTING_STOCK,
-        description: it.description,
-        length: 10,
-        width: 10,
-        height: 10,
-        weight: 1,
-        discontinued: false,
-        category: it.category,
+        id           : it.cloneId,
+        name         : it.title,
+        src          : it.image,
+        alt          : it.title,
+        price        : it.price,
+        stock        : STARTING_STOCK,
+        description  : it.description,
+        length       : 10,
+        width        : 10,
+        height       : 10,
+        weight       : 1,
+        discontinued : false,
+        category     : it.category,
+        isOriginal   : it.isOriginal,
       },
     });
 
-    // Upsert the Inventory
     await prisma.inventory.upsert({
-      where: { itemId: id },
+      where: { itemId: it.cloneId },
       update: {},
       create: {
-        itemId: id,
-        onHand: STARTING_STOCK,
+        itemId : it.cloneId,
+        onHand : STARTING_STOCK,
         reserved: 0,
       },
     });
   }
 
-  console.log(`✅ Seeded ${rawItems.length} items + inventory`);
+  console.log(`✅ Seeded ${allItems.length} cloned items + inventory`);
 }
 
 main()

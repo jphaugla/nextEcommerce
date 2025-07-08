@@ -39,6 +39,7 @@ export default HomePage;
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
   // Fetch directly from your local Cockroach via Prisma
   const products = await prisma.item.findMany({
+     where: { isOriginal: true },
     orderBy: { name: "asc" },
   });
 

@@ -20,20 +20,31 @@ interface InventoryPageProps {
 }
 
 export const getServerSideProps: GetServerSideProps<InventoryPageProps> = async () => {
+  // Fetch all inventory rows with item name
   const raw = await prisma.inventory.findMany({
-    orderBy: { itemId: "asc" },
     include: { item: { select: { name: true } } },
   });
+
+  // Sort by suffix then prefix: 1-0, 2-0 ... 20-0, 1-1, 2-1 ...
+  raw.sort((a, b) => {
+    const [aPrefix, aSuffix] = a.itemId.split("-").map(Number);
+    const [bPrefix, bSuffix] = b.itemId.split("-").map(Number);
+    if (aSuffix !== bSuffix) return aSuffix - bSuffix;
+    return aPrefix - bPrefix;
+  });
+
+  // Map to props
   const rows: InventoryRow[] = raw.map((i) => ({
     id:             i.id,
     itemId:         i.itemId,
-    itemName:       i.item.name,
+    itemName:       i.item?.name ?? "—missing item—",
     onHand:         i.onHand,
     reserved:       i.reserved,
     restockAmount:  i.restockAmount,
     threshold:      i.threshold,
     lastAdjustedAt: i.lastAdjustedAt.toISOString(),
   }));
+
   return { props: { rows } };
 };
 
@@ -50,7 +61,6 @@ const InventoryPage: NextPage<InventoryPageProps> = ({ rows }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Restock failed");
       setMessage(data.message);
-      // refresh the page data
       router.replace(router.asPath);
     } catch (err: any) {
       setMessage(err.message);
