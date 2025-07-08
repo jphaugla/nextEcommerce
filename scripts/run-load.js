@@ -10,9 +10,15 @@ const client = new PrismaClient();
  * Wrap a zero-arg async fn with retry + session-aware logging.
  * Retries on any error message matching deadlock/conflict/serialization/please retry.
  */
-async function runWithRetry(fn, tag, retries = 5, sessionId = null, incrementFailed) {
-  const txId = uuid().slice(0,6);
-  const retryRegex = /deadlock|conflict|serialization failure|please retry your transaction/i;
+async function runWithRetry(
+  fn,
+  tag,
+  retries = 5,
+  sessionId = null,
+  incrementFailed = null
+) {
+  const txId = uuid().slice(0, 6);
+  const retryRegex = /deadlock|conflict|serialization failure|please retry your transaction|server has closed the connection/i;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     const prefix = sessionId ? `[S${sessionId}] ` : '';
@@ -23,20 +29,29 @@ async function runWithRetry(fn, tag, retries = 5, sessionId = null, incrementFai
       return result;
     } catch (err) {
       const msg = err.message || '';
-      const transient = retryRegex.test(msg);
-      if (!transient || attempt === retries) {
-        // count this as a permanent failure
-        console.error(`${prefix}❌ tx [${tag}] id=${txId} failed${transient ? ` after ${retries} attempts` : ''}: ${msg}`);
+      const isTransient =
+        retryRegex.test(msg) ||
+        (err.code === 'P1017'); // PrismaClientKnownRequestError: connection closed
+
+      // If it's not transient or we've exhausted retries, record failure and rethrow
+      if (!isTransient || attempt === retries) {
+        console.error(
+          `${prefix}❌ tx [${tag}] id=${txId} failed${
+            isTransient ? ` after ${retries} attempts` : ''
+          }: ${msg}`
+        );
         if (incrementFailed) await incrementFailed();
         throw err;
       }
-      console.warn(`${prefix}⚠️ tx [${tag}] id=${txId} conflict on attempt ${attempt}: ${msg}`);
-      // back off
-      await new Promise(r => setTimeout(r, 500 * attempt));
+
+      // Otherwise log and back off, then retry
+      console.warn(
+        `${prefix}⚠️ tx [${tag}] id=${txId} conflict on attempt ${attempt}: ${msg}`
+      );
+      await new Promise((r) => setTimeout(r, 500 * attempt));
     }
   }
 }
-
 async function spawnRun(runId, initiator, numSessions, numOrders, restockInterval) {
   // helper to bump the `failed` counter on LoadRun
   const incrementFailed = async () => {
