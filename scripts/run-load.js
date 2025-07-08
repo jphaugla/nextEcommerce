@@ -39,8 +39,15 @@ async function spawnRun(runId, initiator, numSessions, numOrders, restockInterva
 
   // 1) Preload products & inventory
   console.log('› Preloading products…');
-  const allItems = await client.item.findMany({ select:{id:true,stock:true,price:true} });
-
+  const allItems = await client.item.findMany({
+    select: {
+      id: true,
+      stock: true,
+      price: true,
+      description: true,
+      src: true,
+    }
+  });
   // 2) Restock helper
   async function restockIfNeeded() {
     const invs = await client.inventory.findMany({
