@@ -56,8 +56,13 @@ ADDITIONAL NOTE:  if running multi-region only run the *npx prisma db push* comm
    source .env
    npx prisma db push 
    ```
+2a. When this is not on the first node must still rebuild the client
+   ```bash
+   source .env
+   npx prisma generate
+   ```
 
-3. Seed the catalog item
+3. Seed the catalog item   (only run once in multi-region):
    ```bash
    source .env
    npm run seed
