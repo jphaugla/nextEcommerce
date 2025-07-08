@@ -7,30 +7,64 @@ const { v4: uuid }      = require('uuid');
 const client = new PrismaClient();
 
 // retry wrapper (unchanged from before)
-async function runWithRetry(fn, tag, retries = 5, sessionId = null, incrementFailed = null) {
-  const txId = uuid().slice(0,6);
-  const retryRegex = /deadlock|conflict|serialization failure|please retry your transaction|server has closed the connection/i;
+/**
+ * Wrap a zero-arg async fn with retry + session-aware logging.
+ * Retries on deadlock/conflict/serialization/please retry/connection-closed/"can't reach database server".
+ *
+ * @param {() => Promise<any>} fn
+ * @param {string}            tag
+ * @param {number}            retries
+ * @param {number|null}       sessionId
+ * @param {() => Promise}     incrementFailed
+ */
+async function runWithRetry(
+  fn,
+  tag,
+  retries = 5,
+  sessionId = null,
+  incrementFailed = null
+) {
+  const txId = uuid().slice(0, 6);
+  const retryRegex = new RegExp([
+    'deadlock',
+    'conflict',
+    'serialization failure',
+    'please retry your transaction',
+    'server has closed the connection',
+    "can't reach database server"
+  ].join('|'), 'i');
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     const prefix = sessionId ? `[S${sessionId}] ` : '';
-    console.log(`${prefix}▶ ${tag} id=${txId} attempt=${attempt}`);
+    console.log(`${prefix}▶ Starting tx [${tag}] id=${txId} attempt=${attempt}`);
     try {
-      const res = await fn();
-      console.log(`${prefix}✔︎ ${tag} id=${txId} succeeded on attempt ${attempt}`);
-      return res;
+      const result = await fn();
+      console.log(`${prefix}✔︎ tx [${tag}] id=${txId} succeeded on attempt ${attempt}`);
+      return result;
     } catch (err) {
-      const msg = err.message||'';
-      const transient = retryRegex.test(msg) || err.code==='P1017';
-      if (!transient || attempt===retries) {
-        console.error(`${prefix}❌ ${tag} id=${txId} failed${transient?` after ${retries} attempts`:''}: ${msg}`);
+      const msg = err.message || '';
+      const isTransient =
+        retryRegex.test(msg) ||
+        err.code === 'P1017'; // explicit Prisma “connection closed” code
+
+      // on final failure or non-transient, record and rethrow
+      if (!isTransient || attempt === retries) {
+        console.error(
+          `${prefix}❌ tx [${tag}] id=${txId} failed${isTransient ? ` after ${retries} attempts` : ''}: ${msg}`
+        );
         if (incrementFailed) await incrementFailed();
         throw err;
       }
-      console.warn(`${prefix}⚠️ ${tag} id=${txId} conflict on attempt ${attempt}: ${msg}`);
-      await new Promise(r=>setTimeout(r,500*attempt));
+
+      console.warn(
+        `${prefix}⚠️ tx [${tag}] id=${txId} transient error on attempt ${attempt}: ${msg}`
+      );
+      // back off and retry
+      await new Promise(r => setTimeout(r, 500 * attempt));
     }
   }
 }
+
 
 async function spawnRun(runId, initiator, numSessions, numOrders, restockInterval) {
   // helper to bump LoadRun.failed
