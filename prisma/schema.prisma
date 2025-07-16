@@ -73,6 +73,7 @@ model Cart {
   userId String
   items  CartItem[]
   User   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reservations CartReservation[]
 
   @@unique([userId])
 }
@@ -143,6 +144,7 @@ model Inventory {
 
   /// audit log of all adjustments
   transactions   InventoryTransaction[]
+  reservations CartReservation[]
 
   @@unique([itemId])
 }
@@ -181,4 +183,17 @@ model LoadRunSummary {
   startTime       DateTime
   endTime         DateTime
 }
+
+model CartReservation {
+  id         String   @id @default(uuid())
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId     String
+  inventory  Inventory @relation(fields: [itemId], references: [itemId])
+  itemId     String
+  quantity   Int
+  createdAt  DateTime  @default(now())
+
+  @@map("cart_reservation")
+}
+
 

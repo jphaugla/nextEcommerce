@@ -1,164 +1,72 @@
-import React, { useState, useEffect } from "react";
-import type { NextPage } from "next";
-import useSWR from "swr";
+// pages/generate-load.tsx
 
-type Summary = {
-  username: string;
-  ordersCompleted: number;
+import { GetServerSideProps, NextPage } from "next";
+import { prisma } from "@/services/prisma-client";
+
+type RunRow = {
+  id: string;
+  userEmail: string;
+  numSessions: number;
+  numOrders: number;
   startTime: string;
-  endTime: string;
+  endTime: string | null;
+  failed: number;
+  cancelled: boolean;
+  totalOrdersCompleted: number;
 };
 
-const RUN_ID_KEY           = "generateLoadLastRunId";
-const SESSIONS_KEY         = "generateLoadSessions";
-const ORDERS_KEY           = "generateLoadOrders";
-const RESTOCK_INTERVAL_KEY = "generateLoadRestockInterval";
+interface Props {
+  runs: RunRow[];
+}
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-const GenerateLoadPage: NextPage = () => {
-  const [sessions, setSessions]               = useState<number>(5);
-  const [orders, setOrders]                   = useState<number>(10);
-  const [restockInterval, setRestockInterval] = useState<number>(200);
-  const [runId, setRunId]                     = useState<string | null>(null);
-  const [running, setRunning]                 = useState<boolean>(false);
-
-  // On mount, hydrate from localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const v = window.localStorage.getItem(SESSIONS_KEY);
-    if (v) setSessions(Number(v));
-    const o = window.localStorage.getItem(ORDERS_KEY);
-    if (o) setOrders(Number(o));
-    const r = window.localStorage.getItem(RESTOCK_INTERVAL_KEY);
-    if (r) setRestockInterval(Number(r));
-    const last = window.localStorage.getItem(RUN_ID_KEY);
-    if (last) setRunId(last);
-  }, []);
-
-  // Persist params
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(SESSIONS_KEY, String(sessions));
-  }, [sessions]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(ORDERS_KEY, String(orders));
-  }, [orders]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(RESTOCK_INTERVAL_KEY, String(restockInterval));
-  }, [restockInterval]);
-
-  // Fetch summaries
-  const { data: rows, error } = useSWR<Summary[]>(
-    runId ? `/api/load-summary?runId=${runId}` : null,
-    fetcher,
-    { refreshInterval: 3000 }
-  );
-
-  // When all sessions are back, stop the running state
-  useEffect(() => {
-    if (running && rows && rows.length === sessions) {
-      setRunning(false);
-    }
-  }, [running, rows, sessions]);
-
-  // Kick off load
-  const handleRun = async () => {
-    setRunning(true);
-    setRunId(null);
-    const res = await fetch(
-      `/api/generate-load?user=${encodeURIComponent("admin@cockroachlabs.com")}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          numSessions: sessions,
-          numOrders: orders,
-          restockInterval,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      console.error("Failed to start load:", await res.text());
-      setRunning(false);
-      return;
-    }
-
-    const { runId: newRun } = await res.json();
-    window.localStorage.setItem(RUN_ID_KEY, newRun);
-    setRunId(newRun);
-  };
-
+const GenerateLoadPage: NextPage<Props> = ({ runs }) => {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Generate Load</h1>
-      <div className="flex space-x-4 mb-6">
-        <label>
-          Sessions:
-          <input
-            type="number"
-            min={1}
-            value={sessions}
-            onChange={(e) => setSessions(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-        <label>
-          Orders per Session:
-          <input
-            type="number"
-            min={1}
-            value={orders}
-            onChange={(e) => setOrders(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-        <label>
-          Restock Interval:
-          <input
-            type="number"
-            min={1}
-            value={restockInterval}
-            onChange={(e) => setRestockInterval(+e.target.value)}
-            className="ml-2 border px-2 py-1"
-          />
-        </label>
-        <button
-          onClick={handleRun}
-          disabled={running}
-          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-        >
-          {running ? "Running…" : "Start Load"}
-        </button>
-      </div>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Load Run History</h1>
+      <p className="text-gray-700">
+        New load runs are no longer triggered via the UI.  
+        To generate load, run{" "}
+        <code className="bg-gray-100 px-2 py-1 rounded">
+          npm run load &lt;sessions&gt; &lt;orders&gt; &lt;interval_ms&gt;
+        </code>
+      </p>
 
-      {error && <p className="text-red-500">Error loading summaries.</p>}
-
-      {rows && rows.length > 0 && (
-        <table className="min-w-full table-auto border-collapse border border-gray-300">
+      {runs.length === 0 ? (
+        <p className="text-gray-600">No load runs recorded yet.</p>
+      ) : (
+        <table className="min-w-full bg-white border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border px-4 py-2">Username</th>
-              <th className="border px-4 py-2">Orders Completed</th>
-              <th className="border px-4 py-2">Start Time</th>
-              <th className="border px-4 py-2">End Time</th>
+              <th className="border px-4 py-2">Run ID</th>
+              <th className="border px-4 py-2">User</th>
+              <th className="border px-4 py-2">Sessions</th>
+              <th className="border px-4 py-2">Orders/Session</th>
+              <th className="border px-4 py-2">Started</th>
+              <th className="border px-4 py-2">Ended</th>
+              <th className="border px-4 py-2">Failed Txns</th>
+              <th className="border px-4 py-2">Cancelled?</th>
+              <th className="border px-4 py-2">Orders Done</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.username}>
-                <td className="border px-4 py-2">{r.username}</td>
-                <td className="border px-4 py-2">{r.ordersCompleted}</td>
+            {runs.map((run) => (
+              <tr key={run.id} className="even:bg-white odd:bg-gray-50">
+                <td className="border px-4 py-2 text-xs font-mono">{run.id}</td>
+                <td className="border px-4 py-2">{run.userEmail}</td>
+                <td className="border px-4 py-2 text-center">{run.numSessions}</td>
+                <td className="border px-4 py-2 text-center">{run.numOrders}</td>
                 <td className="border px-4 py-2">
-                  {new Date(r.startTime).toLocaleString()}
+                  {new Date(run.startTime).toLocaleString()}
                 </td>
                 <td className="border px-4 py-2">
-                  {new Date(r.endTime).toLocaleString()}
+                  {run.endTime ? new Date(run.endTime).toLocaleString() : "—"}
+                </td>
+                <td className="border px-4 py-2 text-center">{run.failed}</td>
+                <td className="border px-4 py-2 text-center">
+                  {run.cancelled ? "Yes" : "No"}
+                </td>
+                <td className="border px-4 py-2 text-center">
+                  {run.totalOrdersCompleted}
                 </td>
               </tr>
             ))}
@@ -170,3 +78,24 @@ const GenerateLoadPage: NextPage = () => {
 };
 
 export default GenerateLoadPage;
+
+export const getServerSideProps: GetServerSideProps<Props> = async () => {
+  const runs = await prisma.loadRun.findMany({
+    orderBy: { startTime: "desc" },
+    include: { summaries: true },
+  });
+
+  const rows: RunRow[] = runs.map((run) => ({
+    id: run.id,
+    userEmail: run.userEmail,
+    numSessions: run.numSessions,
+    numOrders: run.numOrders,
+    startTime: run.startTime.toISOString(),
+    endTime: run.endTime ? run.endTime.toISOString() : null,
+    failed: run.failed,
+    cancelled: run.cancelled,
+    totalOrdersCompleted: run.summaries.reduce((sum, s) => sum + s.ordersCompleted, 0),
+  }));
+
+  return { props: { runs: rows } };
+};

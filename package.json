@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "restock": "node scripts/restock-run.js",
-    "load": "node scripts/run-load.js 3 1000 40 admin@cockroachlabs.com",
+    "load": "node scripts/run-load.js 1 100 90 admin@cockroachlabs.com",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

@@ -22,6 +22,12 @@ const nextConfig = {
         port: "",        // optional, defaults to any
         pathname: "/**"  // allow all paths
       },
+      {
+         protocol: "https",
+         hostname: "assets.adidas.com",
+         port: "",       // optional, defaults to any
+         pathname: "/**" // allow all paths under that host
+       },
     ],
   },
 };

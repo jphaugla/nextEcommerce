@@ -37,17 +37,14 @@ const HomePage: NextPage<Props> = ({ products }) => {
 export default HomePage;
 
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  // Fetch directly from your local Cockroach via Prisma
   const products = await prisma.item.findMany({
-     where: { isOriginal: true },
+    where: { isOriginal: true },
     orderBy: { name: "asc" },
   });
 
   return {
     props: {
-      // Next.js serializes dates, so we JSON-roundtrip for safety
       products: JSON.parse(JSON.stringify(products)),
     },
   };
 };
-
