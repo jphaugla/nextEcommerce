@@ -1,7 +1,7 @@
 // utils/hooks/useAddCartItem.ts
 export function useAddCartItem() {
   const addCartItem = async (cartId: string, itemId: string, quantity: number) => {
-    const res = await fetch("/api/addCartItem", {
+    const res = await fetch("/api/cart/addCartItem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cartId, itemId, quantity }),

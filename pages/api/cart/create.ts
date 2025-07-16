@@ -9,25 +9,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { username } = req.body as { username?: string };
-  if (!username) {
-    return res.status(400).json({ error: "username is required" });
-  }
+  if (!username) return res.status(400).json({ error: "username is required" });
 
-  // 1) Find the User by email
+  // 1) Find user
   const user = await prisma.user.findUnique({ where: { email: username } });
-  if (!user) {
-    return res.status(404).json({ error: `User ${username} not found` });
-  }
+  if (!user) return res.status(404).json({ error: `User ${username} not found` });
 
-  // 2) Upsert their Cart
-  const cart = await runWithRetry(tx =>
+  // 2) Upsert cart
+  const cart = await runWithRetry((tx) =>
     tx.cart.upsert({
-    where: { userId: user.id },
-    update: {},
-    create: {
-      userId: user.id,
-    },
-  });
+      where: { userId: user.id },
+      update: {},
+      create: { userId: user.id },
+    })
   );
 
   return res.status(200).json({ cartId: cart.id });
